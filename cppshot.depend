@@ -1,0 +1,18 @@
+# depslib dependency file v1.0
+1626120161 source:c:\users\brabe\documents\codeblocks\cppshot\main.cpp
+	<tchar.h>
+	<windows.h>
+	<winuser.h>
+	<stdio.h>
+	<wingdi.h>
+	<gdiplus.h>
+	<stdlib.h>
+	<sstream>
+	<string>
+	<iostream>
+	<vector>
+	<locale>
+	<codecvt>
+	<string>
+	<sys/stat.h>
+
