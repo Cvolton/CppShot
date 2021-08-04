@@ -119,7 +119,7 @@ HWND createBackdropWindow(HINSTANCE hThisInstance, TCHAR className, HBRUSH backg
            0,                   /* Extended possibilites for variation */
             &className,         /* Classname */
            _T("Backdrop Window"),       /* Title Text */
-           WS_OVERLAPPEDWINDOW, /* default window */
+           WS_POPUP, /* default window */
            CW_USEDEFAULT,       /* Windows decides the position */
            CW_USEDEFAULT,       /* where the window ends up on the screen */
            544,                 /* The programs width */
@@ -130,7 +130,7 @@ HWND createBackdropWindow(HINSTANCE hThisInstance, TCHAR className, HBRUSH backg
            NULL                 /* No Window Creation data */
            );
 
-    SetWindowLong(hwnd, GWL_STYLE, WS_POPUP);
+    //SetWindowLong(hwnd, GWL_STYLE, WS_POPUP);
 
     return hwnd;
 }
@@ -198,8 +198,10 @@ void CaptureCompositeScreenshot(HINSTANCE hThisInstance, HWND whiteHwnd, HWND bl
 
     //hiding the taskbar in case it gets in the way
     //note that this may cause issues if the program crashes during capture
-    ShowWindow(taskbar, 0);
-    ShowWindow(startButton, 0);
+    if(foregoundWindow != taskbar && foregoundWindow != startButton){
+        ShowWindow(taskbar, 0);
+        ShowWindow(startButton, 0);
+    }
 
     SetForegroundWindow(foregoundWindow);
 
