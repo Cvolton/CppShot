@@ -189,20 +189,33 @@ HBITMAP CaptureScreenArea(RECT rct){
     return hbitmapCopy;
 }
 
-void CaptureCompositeScreenshot(HINSTANCE hThisInstance, HWND whiteHwnd, HWND blackHwnd, HWND transparentHwnd, bool creMode){
+void CaptureCompositeScreenshot(HINSTANCE hThisInstance, HWND whiteHwnd, HWND blackHwnd, bool creMode){
 
+    HWND desktopWindow = GetDesktopWindow();
     HWND foregoundWindow = GetForegroundWindow();
+    HWND taskbar = FindWindow("Shell_TrayWnd", NULL);
+    HWND startButton = FindWindow("Button", "Start");
+
+    //hiding the taskbar in case it gets in the way
+    //note that this may cause issues if the program crashes during capture
+    ShowWindow(taskbar, 0);
+    ShowWindow(startButton, 0);
 
     SetForegroundWindow(foregoundWindow);
 
     RECT rct;
+    RECT rctDesktop;
 
     GetWindowRect(foregoundWindow, &rct);
+    GetWindowRect(desktopWindow, &rctDesktop);
 
-    rct.left -= 100;
-    rct.right += 100;
-    rct.bottom += 100;
-    rct.top -= 100;
+    std::cout << rct.left << ";" << rct.right << ";" << rct.top << ";" << rct.bottom << std::endl;
+    std::cout << rctDesktop.left << ";" << rctDesktop.right << ";" << rctDesktop.top << ";" << rctDesktop.bottom << std::endl;
+
+    rct.left = (rctDesktop.left < (rct.left-100)) ? (rct.left - 100) : rctDesktop.left;
+    rct.right = (rctDesktop.right > (rct.right+100)) ? (rct.right + 100) : rctDesktop.right;
+    rct.bottom = (rctDesktop.bottom > (rct.bottom+100)) ? (rct.bottom + 100) : rctDesktop.bottom;
+    rct.top = (rctDesktop.top < (rct.top-100)) ? (rct.top - 100) : rctDesktop.top;
 
     if(!SetWindowPos(blackHwnd, foregoundWindow, rct.left, rct.top, rct.right - rct.left, rct.bottom - rct.top, SWP_NOACTIVATE))
         SetWindowPos(blackHwnd, whiteHwnd, rct.left, rct.top, rct.right - rct.left, rct.bottom - rct.top, SWP_NOACTIVATE);
@@ -222,9 +235,7 @@ void CaptureCompositeScreenshot(HINSTANCE hThisInstance, HWND whiteHwnd, HWND bl
 
     //inactive capture
     if(creMode){
-        ShowWindow(transparentHwnd, 1);
-        SetForegroundWindow(foregoundWindow);
-        SetForegroundWindow(transparentHwnd);
+        SetForegroundWindow(desktopWindow);
         Sleep(33);
     }
     Gdiplus::Bitmap whiteInactiveShot(CaptureScreenArea(rct), NULL);
@@ -234,6 +245,10 @@ void CaptureCompositeScreenshot(HINSTANCE hThisInstance, HWND whiteHwnd, HWND bl
         Sleep(33);
     }
     Gdiplus::Bitmap blackInactiveShot(CaptureScreenArea(rct), NULL);
+
+    //activating taskbar
+    ShowWindow(taskbar, 1);
+    ShowWindow(startButton, 1);
 
     //calculating crop
     int leftcrop = (rct.right - rct.left);
@@ -271,7 +286,6 @@ void CaptureCompositeScreenshot(HINSTANCE hThisInstance, HWND whiteHwnd, HWND bl
     if(leftcrop >= rightcrop || topcrop >= bottomcrop){
         ShowWindow (whiteHwnd, 0);
         ShowWindow (blackHwnd, 0);
-        ShowWindow(transparentHwnd, 0);
         MessageBox(whiteHwnd, "Screenshot is empty, aborting capture.", "Error", MB_OK | MB_ICONSTOP);
         return;
     }
@@ -344,7 +358,6 @@ void CaptureCompositeScreenshot(HINSTANCE hThisInstance, HWND whiteHwnd, HWND bl
     //hiding backdrop
     ShowWindow (blackHwnd, 0);
     ShowWindow (whiteHwnd, 0);
-    ShowWindow(transparentHwnd, 0);
 
     //Cleaning memory
     delete croppedBitmap;
@@ -447,7 +460,6 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
     /* Create backdrop windows */
     HWND whiteHwnd = createBackdropWindow(hThisInstance, *whiteBackdropClassName, (HBRUSH) CreateSolidBrush(RGB(255,255,255)));
     HWND blackHwnd = createBackdropWindow(hThisInstance, *blackBackdropClassName, (HBRUSH) CreateSolidBrush(RGB(0,0,0)));
-    HWND transparentHwnd = createBackdropWindow(hThisInstance, *transparentBackdropClassName, (HBRUSH) 0);
 
     /* Start GDI+ */
     Gdiplus::GdiplusStartupInput gpStartupInput;
@@ -461,9 +473,9 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
         {
             _tprintf(_T("WM_HOTKEY received\n"));
             if (messages.wParam == 1)
-                CaptureCompositeScreenshot(hThisInstance, whiteHwnd, blackHwnd, transparentHwnd, false);
+                CaptureCompositeScreenshot(hThisInstance, whiteHwnd, blackHwnd, false);
             else if (messages.wParam == 2)
-                CaptureCompositeScreenshot(hThisInstance, whiteHwnd, blackHwnd, transparentHwnd, true);
+                CaptureCompositeScreenshot(hThisInstance, whiteHwnd, blackHwnd, true);
         }
 
         /* Translate virtual-key messages into character messages */
