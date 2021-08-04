@@ -219,8 +219,10 @@ void CaptureCompositeScreenshot(HINSTANCE hThisInstance, HWND whiteHwnd, HWND bl
     rct.bottom = (rctDesktop.bottom > (rct.bottom+100)) ? (rct.bottom + 100) : rctDesktop.bottom;
     rct.top = (rctDesktop.top < (rct.top-100)) ? (rct.top - 100) : rctDesktop.top;
 
-    if(!SetWindowPos(blackHwnd, foregoundWindow, rct.left, rct.top, rct.right - rct.left, rct.bottom - rct.top, SWP_NOACTIVATE))
-        SetWindowPos(blackHwnd, whiteHwnd, rct.left, rct.top, rct.right - rct.left, rct.bottom - rct.top, SWP_NOACTIVATE);
+    if(!SetWindowPos(blackHwnd, foregoundWindow, rct.left, rct.top, rct.right - rct.left, rct.bottom - rct.top, SWP_NOACTIVATE)){
+        SetWindowPos(blackHwnd, NULL, rct.left, rct.top, rct.right - rct.left, rct.bottom - rct.top, SWP_NOACTIVATE);
+        SetForegroundWindow(foregoundWindow);
+    }
     SetWindowPos(whiteHwnd, blackHwnd, rct.left, rct.top, rct.right - rct.left, rct.bottom - rct.top, SWP_NOACTIVATE);
 
     ShowWindow (blackHwnd, SW_SHOWNOACTIVATE);
