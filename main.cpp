@@ -116,10 +116,10 @@ HWND createBackdropWindow(HINSTANCE hThisInstance, TCHAR className, HBRUSH backg
     }
 
     hwnd = CreateWindowEx (
-           0,                   /* Extended possibilites for variation */
+           WS_EX_TOOLWINDOW,                   /* Extended possibilites for variation */
             &className,         /* Classname */
            _T("Backdrop Window"),       /* Title Text */
-           WS_POPUP, /* default window */
+           WS_POPUP , /* default window */
            CW_USEDEFAULT,       /* Windows decides the position */
            CW_USEDEFAULT,       /* where the window ends up on the screen */
            544,                 /* The programs width */
