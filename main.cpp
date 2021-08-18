@@ -20,6 +20,8 @@
 #include <string>
 #include <sys/stat.h>
 
+#define CPPSHOT_VERSION "0.2 DEV"
+
 /*  Declare Windows procedure  */
 LRESULT CALLBACK WindowProcedure (HWND, UINT, WPARAM, LPARAM);
 
@@ -189,6 +191,48 @@ HBITMAP CaptureScreenArea(RECT rct){
     return hbitmapCopy;
 }
 
+void WaitForColor(RECT rct, unsigned long color){
+    for(int x = 0; x < 10; x++){ //capping out at 330 ms, which is already fairly slow
+        Sleep(33);
+        RECT rctOnePx;
+        rctOnePx.left = rct.left;
+        rctOnePx.top = rct.top;
+        rctOnePx.right = rct.left + 1;
+        rctOnePx.bottom = rct.top + 1;
+        HBITMAP pixelBmp = CaptureScreenArea(rctOnePx);
+
+        //code adapted from https://stackoverflow.com/questions/26233848/c-read-pixels-with-getdibits
+        HDC hdc = GetDC(0);
+
+        BITMAPINFO MyBMInfo = {0};
+        MyBMInfo.bmiHeader.biSize = sizeof(MyBMInfo.bmiHeader);
+
+        // Get the BITMAPINFO structure from the bitmap
+        if(0 == GetDIBits(hdc, pixelBmp, 0, 0, NULL, &MyBMInfo, DIB_RGB_COLORS)) {
+            std::cout << "error" << std::endl;
+        }
+
+        // create the bitmap buffer
+        BYTE* lpPixels = new BYTE[MyBMInfo.bmiHeader.biSizeImage];
+
+        // Better do this here - the original bitmap might have BI_BITFILEDS, which makes it
+        // necessary to read the color table - you might not want this.
+        MyBMInfo.bmiHeader.biCompression = BI_RGB;
+
+        // get the actual bitmap buffer
+        if(0 == GetDIBits(hdc, pixelBmp, 0, MyBMInfo.bmiHeader.biHeight, (LPVOID)lpPixels, &MyBMInfo, DIB_RGB_COLORS)) {
+            std::cout << "error2" << std::endl;
+        }
+
+        //end of stackoverflow code
+        unsigned long currentColor = (((unsigned long)lpPixels[0]) << 16) | (((unsigned long)lpPixels[1]) << 8) | (((unsigned long)lpPixels[2]));
+
+        std::cout << currentColor << std::endl;
+        if(color == currentColor)
+            break;
+    }
+}
+
 void CaptureCompositeScreenshot(HINSTANCE hThisInstance, HWND whiteHwnd, HWND blackHwnd, bool creMode){
 
     HWND desktopWindow = GetDesktopWindow();
@@ -227,26 +271,27 @@ void CaptureCompositeScreenshot(HINSTANCE hThisInstance, HWND whiteHwnd, HWND bl
 
     ShowWindow (blackHwnd, SW_SHOWNOACTIVATE);
 
-    Sleep(33);
     //taking the screenshot
+    WaitForColor(rct, RGB(0,0,0));
     Gdiplus::Bitmap blackShot(CaptureScreenArea(rct), NULL);
 
     ShowWindow (blackHwnd, 0);
     ShowWindow (whiteHwnd, SW_SHOWNOACTIVATE);
     Sleep(33);
 
+    WaitForColor(rct, RGB(255,255,255));
     Gdiplus::Bitmap whiteShot(CaptureScreenArea(rct), NULL);
 
     //inactive capture
     if(creMode){
         SetForegroundWindow(desktopWindow);
-        Sleep(33);
+        WaitForColor(rct, RGB(255,255,255));
     }
     Gdiplus::Bitmap whiteInactiveShot(CaptureScreenArea(rct), NULL);
     if(creMode){
         ShowWindow (blackHwnd, SW_SHOWNOACTIVATE);
         ShowWindow (whiteHwnd, 0);
-        Sleep(33);
+        WaitForColor(rct, RGB(0,0,0));
     }
     Gdiplus::Bitmap blackInactiveShot(CaptureScreenArea(rct), NULL);
 
@@ -402,7 +447,7 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
     hwnd = CreateWindowEx (
            0,                   /* Extended possibilites for variation */
            szClassName,         /* Classname */
-           _T("CppShot 0.2"),       /* Title Text */
+           _T("CppShot " CPPSHOT_VERSION),       /* Title Text */
            WS_OVERLAPPEDWINDOW, /* default window */
            CW_USEDEFAULT,       /* Windows decides the position */
            CW_USEDEFAULT,       /* where the window ends up on the screen */
