@@ -17,10 +17,11 @@
 #include <vector>
 #include <locale>
 #include <codecvt>
+#include <chrono>
 #include <string>
 #include <sys/stat.h>
 
-#define CPPSHOT_VERSION "0.2 DEV"
+#define CPPSHOT_VERSION "0.2 - build: " __DATE__ " " __TIME__
 
 /*  Declare Windows procedure  */
 LRESULT CALLBACK WindowProcedure (HWND, UINT, WPARAM, LPARAM);
@@ -193,7 +194,7 @@ HBITMAP CaptureScreenArea(RECT rct){
 
 void WaitForColor(RECT rct, unsigned long color){
     for(int x = 0; x < 10; x++){ //capping out at 330 ms, which is already fairly slow
-        Sleep(33);
+
         RECT rctOnePx;
         rctOnePx.left = rct.left;
         rctOnePx.top = rct.top;
@@ -230,6 +231,8 @@ void WaitForColor(RECT rct, unsigned long color){
         std::cout << currentColor << std::endl;
         if(color == currentColor)
             break;
+
+        Sleep(5);
     }
 }
 
@@ -273,13 +276,25 @@ void CaptureCompositeScreenshot(HINSTANCE hThisInstance, HWND whiteHwnd, HWND bl
 
     //taking the screenshot
     WaitForColor(rct, RGB(0,0,0));
+
+    //unsigned __int64 blackTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    //std::cout << blackTime << std::endl;
+
     Gdiplus::Bitmap blackShot(CaptureScreenArea(rct), NULL);
 
     ShowWindow (blackHwnd, 0);
     ShowWindow (whiteHwnd, SW_SHOWNOACTIVATE);
-    Sleep(33);
 
     WaitForColor(rct, RGB(255,255,255));
+
+    /*while(true){
+        unsigned __int64 whiteTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+        std::cout << whiteTime << std::endl;
+        if((whiteTime-blackTime) % 2000 == 0)
+            break;
+    }*/
+    //Sleep(2000);
+
     Gdiplus::Bitmap whiteShot(CaptureScreenArea(rct), NULL);
 
     //inactive capture
@@ -298,6 +313,10 @@ void CaptureCompositeScreenshot(HINSTANCE hThisInstance, HWND whiteHwnd, HWND bl
     //activating taskbar
     ShowWindow(taskbar, 1);
     ShowWindow(startButton, 1);
+
+    //hiding backdrop
+    ShowWindow (blackHwnd, 0);
+    ShowWindow (whiteHwnd, 0);
 
     //calculating crop
     int leftcrop = (rct.right - rct.left);
@@ -403,10 +422,6 @@ void CaptureCompositeScreenshot(HINSTANCE hThisInstance, HWND whiteHwnd, HWND bl
     croppedBitmap->Save(fileNameUtf16.c_str(), &pngEncoder, NULL);
     if(creMode)
         croppedInactive->Save(fileNameInactiveUtf16.c_str(), &pngEncoder, NULL);
-
-    //hiding backdrop
-    ShowWindow (blackHwnd, 0);
-    ShowWindow (whiteHwnd, 0);
 
     //Cleaning memory
     delete croppedBitmap;
