@@ -39,6 +39,10 @@ inline bool FileExists (const std::string& name) {
   return (stat (name.c_str(), &buffer) == 0);
 }
 
+inline unsigned __int64 CurrentTimestamp() {
+    return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+}
+
 int GetEncoderClsid(const WCHAR* format, CLSID* pClsid)
 {
     UINT  num = 0;          // number of image encoders
@@ -240,6 +244,8 @@ void WaitForColor(RECT rct, unsigned long color){
 
 void CaptureCompositeScreenshot(HINSTANCE hThisInstance, HWND whiteHwnd, HWND blackHwnd, bool creMode){
 
+    std::cout << "Screenshot capture start: " << CurrentTimestamp() << std::endl;
+
     HWND desktopWindow = GetDesktopWindow();
     HWND foregoundWindow = GetForegroundWindow();
     HWND taskbar = FindWindow("Shell_TrayWnd", NULL);
@@ -279,8 +285,7 @@ void CaptureCompositeScreenshot(HINSTANCE hThisInstance, HWND whiteHwnd, HWND bl
     //taking the screenshot
     WaitForColor(rct, RGB(0,0,0));
 
-    //unsigned __int64 blackTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-    //std::cout << blackTime << std::endl;
+    std::cout << "Capturing black: " << CurrentTimestamp() << std::endl;
 
     Gdiplus::Bitmap blackShot(CaptureScreenArea(rct), NULL);
 
@@ -297,19 +302,23 @@ void CaptureCompositeScreenshot(HINSTANCE hThisInstance, HWND whiteHwnd, HWND bl
     }*/
     //Sleep(2000);
 
+    std::cout << "Capturing white: " << CurrentTimestamp() << std::endl;
     Gdiplus::Bitmap whiteShot(CaptureScreenArea(rct), NULL);
 
     //inactive capture
     if(creMode){
         SetForegroundWindow(desktopWindow);
+        Sleep(33); //Time for the foreground window to settle
         WaitForColor(rct, RGB(255,255,255));
     }
+    std::cout << "Capturing black inactive: " << CurrentTimestamp() << std::endl;
     Gdiplus::Bitmap whiteInactiveShot(CaptureScreenArea(rct), NULL);
     if(creMode){
         ShowWindow (blackHwnd, SW_SHOWNOACTIVATE);
         ShowWindow (whiteHwnd, 0);
         WaitForColor(rct, RGB(0,0,0));
     }
+    std::cout << "Capturing white inactive: " << CurrentTimestamp() << std::endl;
     Gdiplus::Bitmap blackInactiveShot(CaptureScreenArea(rct), NULL);
 
     //activating taskbar
@@ -320,14 +329,17 @@ void CaptureCompositeScreenshot(HINSTANCE hThisInstance, HWND whiteHwnd, HWND bl
     ShowWindow (blackHwnd, 0);
     ShowWindow (whiteHwnd, 0);
 
+    //differentiating alpha
+    std::cout << "Differentiating alpha: " << CurrentTimestamp() << std::endl;
+    Gdiplus::Bitmap transparentBitmap(whiteShot.GetWidth(), whiteShot.GetHeight(), PixelFormat32bppARGB);
+    DifferentiateAlpha(&whiteShot, &blackShot, &transparentBitmap);
+
     //calculating crop
+    std::cout << "Capturing crop: " << CurrentTimestamp() << std::endl;
     int leftcrop = (rct.right - rct.left);
     int rightcrop = -1;
     int topcrop = (rct.bottom - rct.top);
     int bottomcrop = -1;
-
-    Gdiplus::Bitmap transparentBitmap(whiteShot.GetWidth(), whiteShot.GetHeight(), PixelFormat32bppARGB);
-    DifferentiateAlpha(&whiteShot, &blackShot, &transparentBitmap);
 
     Gdiplus::Bitmap transparentInactiveBitmap(whiteShot.GetWidth(), whiteShot.GetHeight(), PixelFormat32bppARGB);
     if(creMode)
@@ -373,10 +385,12 @@ void CaptureCompositeScreenshot(HINSTANCE hThisInstance, HWND whiteHwnd, HWND bl
 
     printf("%i ; %i ; %i ; %i", leftcrop, topcrop, rightcrop, bottomcrop);
 
+    std::cout << "Creating bitmaps: " << CurrentTimestamp() << std::endl;
     Gdiplus::Bitmap* croppedBitmap = transparentBitmap.Clone(Gdiplus::Rect(leftcrop, topcrop, rightcrop, bottomcrop), PixelFormatDontCare);
     Gdiplus::Bitmap* croppedInactive = transparentInactiveBitmap.Clone(Gdiplus::Rect(leftcrop, topcrop, rightcrop, bottomcrop), PixelFormatDontCare);
 
     //Saving the image
+    std::cout << "Saving: " << CurrentTimestamp() << std::endl;
     CLSID pngEncoder = {0x557cf406, 0x1a04, 0x11d3, {0x9a, 0x73, 0x00, 0x00, 0xf8, 0x1e, 0xf3, 0x2e} } ;
     GetEncoderClsid(L"image/png", &pngEncoder);
 
@@ -426,6 +440,7 @@ void CaptureCompositeScreenshot(HINSTANCE hThisInstance, HWND whiteHwnd, HWND bl
     if(creMode)
         croppedInactive->Save(fileNameInactiveUtf16.c_str(), &pngEncoder, NULL);
 
+    std::cout << "Done: " << CurrentTimestamp() << std::endl;
     //Cleaning memory
     delete croppedBitmap;
     delete croppedInactive;
