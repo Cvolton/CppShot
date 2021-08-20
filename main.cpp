@@ -23,6 +23,8 @@
 
 #define CPPSHOT_VERSION "0.2 - build: " __DATE__ " " __TIME__
 
+#define DEFAULT_SAVE_DIRECTORY "C:\\test\\"
+
 /*  Declare Windows procedure  */
 LRESULT CALLBACK WindowProcedure (HWND, UINT, WPARAM, LPARAM);
 
@@ -394,7 +396,8 @@ void CaptureCompositeScreenshot(HINSTANCE hThisInstance, HWND whiteHwnd, HWND bl
     std::cout << windowTextStr << std::endl;
     //std::cout << std::endl << len;
 
-    std::string path = "c:\\test\\";
+    CreateDirectory(DEFAULT_SAVE_DIRECTORY, NULL);
+    std::string path = DEFAULT_SAVE_DIRECTORY;
     std::ostringstream pathbuild;
     std::ostringstream pathbuildInactive;
     pathbuild << path << windowTextStr << "_b1.png";
