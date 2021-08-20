@@ -253,6 +253,54 @@ void RemoveIllegalChars(std::string* str){
     }
 }
 
+Gdiplus::Rect CalculateCrop(Gdiplus::Bitmap* transparentBitmap){
+    int imageWidth = transparentBitmap->GetWidth();
+    int imageHeight = transparentBitmap->GetHeight();
+
+    int leftcrop = imageWidth;
+    int rightcrop = -1;
+    int topcrop = imageHeight;
+    int bottomcrop = -1;
+
+    Gdiplus::Rect rect1(0, 0, imageWidth, imageHeight);
+
+    Gdiplus::BitmapData transparentBitmapData;
+    transparentBitmap->LockBits(&rect1, Gdiplus::ImageLockModeRead, PixelFormat32bppARGB, &transparentBitmapData);
+    BYTE* transparentPixels = (BYTE*) (void*) transparentBitmapData.Scan0;
+
+    for(int x = 0; x < imageWidth; x++){
+        for(int y = 0; y < imageHeight; y++){
+            int currentPixel = (y*imageWidth + x)*4;
+            if(transparentPixels[currentPixel+3] > 0){
+                leftcrop = (leftcrop > x) ? x : leftcrop;
+                topcrop = (topcrop > y) ? y : topcrop;
+                rightcrop = (x > rightcrop) ? x : rightcrop;
+                bottomcrop = (y > bottomcrop) ? y : bottomcrop;
+            }
+        }
+    }
+
+    transparentBitmap->UnlockBits(&transparentBitmapData);
+
+    if(leftcrop >= rightcrop || topcrop >= bottomcrop){
+        return Gdiplus::Rect(0, 0, 0, 0);
+    }
+
+    bottomcrop -= topcrop;
+    rightcrop -= leftcrop;
+
+    /*if(creMode){
+        //if((rightcrop % 2 == 1) && rightcrop != rct.right)
+            rightcrop++;
+
+        //if((bottomcrop % 2 == 1) && bottomcrop != rct.bottom)
+            bottomcrop++;
+    }*/
+
+    printf("%i ; %i ; %i ; %i", leftcrop, topcrop, rightcrop, bottomcrop);
+    return Gdiplus::Rect(leftcrop, topcrop, rightcrop, bottomcrop);
+}
+
 void CaptureCompositeScreenshot(HINSTANCE hThisInstance, HWND whiteHwnd, HWND blackHwnd, bool creMode){
 
     std::cout << "Screenshot capture start: " << CurrentTimestamp() << std::endl;
@@ -353,54 +401,18 @@ void CaptureCompositeScreenshot(HINSTANCE hThisInstance, HWND whiteHwnd, HWND bl
 
     //calculating crop
     std::cout << "Capturing crop: " << CurrentTimestamp() << std::endl;
-    int leftcrop = (rct.right - rct.left);
-    int rightcrop = -1;
-    int topcrop = (rct.bottom - rct.top);
-    int bottomcrop = -1;
-
     Gdiplus::Rect rect1(0, 0, (rct.right - rct.left), (rct.bottom - rct.top));
-
-    Gdiplus::BitmapData transparentBitmapData;
-    transparentBitmap.LockBits(&rect1, Gdiplus::ImageLockModeRead, PixelFormat32bppARGB, &transparentBitmapData);
-    BYTE* transparentPixels = (BYTE*) (void*) transparentBitmapData.Scan0;
-
-    for(int x = 0; x < (rct.right - rct.left); x++){
-        for(int y = 0; y < (rct.bottom - rct.top); y++){
-            int currentPixel = (y*(rct.right - rct.left) + x)*4;
-            if(transparentPixels[currentPixel+3] > 0){
-                leftcrop = (leftcrop > x) ? x : leftcrop;
-                topcrop = (topcrop > y) ? y : topcrop;
-                rightcrop = (x > rightcrop) ? x : rightcrop;
-                bottomcrop = (y > bottomcrop) ? y : bottomcrop;
-            }
-        }
-    }
-
-    transparentBitmap.UnlockBits(&transparentBitmapData);
-
-    if(leftcrop >= rightcrop || topcrop >= bottomcrop){
+    Gdiplus::Rect crop = CalculateCrop(&transparentBitmap);
+    if(crop.GetLeft() == crop.GetRight() || crop.GetTop() == crop.GetBottom()){
         ShowWindow (whiteHwnd, 0);
         ShowWindow (blackHwnd, 0);
         MessageBox(whiteHwnd, "Screenshot is empty, aborting capture.", "Error", MB_OK | MB_ICONSTOP);
         return;
     }
 
-    bottomcrop -= topcrop;
-    rightcrop -= leftcrop;
-
-    if(creMode){
-        if((rightcrop % 2 == 1) && rightcrop != rct.right)
-            rightcrop++;
-
-        if((bottomcrop % 2 == 1) && bottomcrop != rct.bottom)
-            bottomcrop++;
-    }
-
-    printf("%i ; %i ; %i ; %i", leftcrop, topcrop, rightcrop, bottomcrop);
-
     std::cout << "Creating bitmaps: " << CurrentTimestamp() << std::endl;
-    Gdiplus::Bitmap* croppedBitmap = transparentBitmap.Clone(Gdiplus::Rect(leftcrop, topcrop, rightcrop, bottomcrop), PixelFormatDontCare);
-    Gdiplus::Bitmap* croppedInactive = transparentInactiveBitmap.Clone(Gdiplus::Rect(leftcrop, topcrop, rightcrop, bottomcrop), PixelFormatDontCare);
+    Gdiplus::Bitmap* croppedBitmap = transparentBitmap.Clone(crop, PixelFormatDontCare);
+    Gdiplus::Bitmap* croppedInactive = transparentInactiveBitmap.Clone(crop, PixelFormatDontCare);
 
     //Saving the image
     std::cout << "Saving: " << CurrentTimestamp() << std::endl;
