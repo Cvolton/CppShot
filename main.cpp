@@ -260,6 +260,7 @@ void CaptureCompositeScreenshot(HINSTANCE hThisInstance, HWND whiteHwnd, HWND bl
 
     SetForegroundWindow(foregoundWindow);
 
+    //calculating screenshot area
     RECT rct;
     RECT rctDesktop;
 
@@ -274,6 +275,7 @@ void CaptureCompositeScreenshot(HINSTANCE hThisInstance, HWND whiteHwnd, HWND bl
     rct.bottom = (rctDesktop.bottom > (rct.bottom+100)) ? (rct.bottom + 100) : rctDesktop.bottom;
     rct.top = (rctDesktop.top < (rct.top-100)) ? (rct.top - 100) : rctDesktop.top;
 
+    //spawning backdrop
     if(!SetWindowPos(blackHwnd, foregoundWindow, rct.left, rct.top, rct.right - rct.left, rct.bottom - rct.top, SWP_NOACTIVATE)){
         SetWindowPos(blackHwnd, NULL, rct.left, rct.top, rct.right - rct.left, rct.bottom - rct.top, SWP_NOACTIVATE);
         SetForegroundWindow(foregoundWindow);
@@ -334,16 +336,16 @@ void CaptureCompositeScreenshot(HINSTANCE hThisInstance, HWND whiteHwnd, HWND bl
     Gdiplus::Bitmap transparentBitmap(whiteShot.GetWidth(), whiteShot.GetHeight(), PixelFormat32bppARGB);
     DifferentiateAlpha(&whiteShot, &blackShot, &transparentBitmap);
 
+    Gdiplus::Bitmap transparentInactiveBitmap(whiteShot.GetWidth(), whiteShot.GetHeight(), PixelFormat32bppARGB);
+    if(creMode)
+        DifferentiateAlpha(&whiteInactiveShot, &blackInactiveShot, &transparentInactiveBitmap);
+
     //calculating crop
     std::cout << "Capturing crop: " << CurrentTimestamp() << std::endl;
     int leftcrop = (rct.right - rct.left);
     int rightcrop = -1;
     int topcrop = (rct.bottom - rct.top);
     int bottomcrop = -1;
-
-    Gdiplus::Bitmap transparentInactiveBitmap(whiteShot.GetWidth(), whiteShot.GetHeight(), PixelFormat32bppARGB);
-    if(creMode)
-        DifferentiateAlpha(&whiteInactiveShot, &blackInactiveShot, &transparentInactiveBitmap);
 
     Gdiplus::Rect rect1(0, 0, (rct.right - rct.left), (rct.bottom - rct.top));
 
