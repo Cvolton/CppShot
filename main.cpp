@@ -242,6 +242,17 @@ void WaitForColor(RECT rct, unsigned long color){
     }
 }
 
+void RemoveIllegalChars(std::string* str){
+    std::string::iterator it;
+    std::string illegalChars = "\\/:?\"<>|*";
+    for (it = str->begin() ; it < str->end() ; ++it){
+        bool found = illegalChars.find(*it) != std::string::npos;
+        if(found){
+            *it = ' ';
+        }
+    }
+}
+
 void CaptureCompositeScreenshot(HINSTANCE hThisInstance, HWND whiteHwnd, HWND blackHwnd, bool creMode){
 
     std::cout << "Screenshot capture start: " << CurrentTimestamp() << std::endl;
@@ -400,14 +411,7 @@ void CaptureCompositeScreenshot(HINSTANCE hThisInstance, HWND whiteHwnd, HWND bl
     GetWindowText(foregoundWindow, h, 2048);
     std::string windowTextStr(h);
 
-    std::string::iterator it;
-    std::string illegalChars = "\\/:?\"<>|*";
-    for (it = windowTextStr.begin() ; it < windowTextStr.end() ; ++it){
-        bool found = illegalChars.find(*it) != std::string::npos;
-        if(found){
-            *it = ' ';
-        }
-    }
+    RemoveIllegalChars(&windowTextStr);
 
     std::cout << windowTextStr << std::endl;
     //std::cout << std::endl << len;
