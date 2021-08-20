@@ -148,7 +148,7 @@ void DifferentiateAlpha(Gdiplus::Bitmap* whiteShot, Gdiplus::Bitmap* blackShot, 
 
     Gdiplus::BitmapData transparentBitmapData;
     Gdiplus::Rect rect1(0, 0, transparentBitmap->GetWidth(), transparentBitmap->GetHeight());
-    transparentBitmap->LockBits(&rect1, Gdiplus::ImageLockModeRead, PixelFormat32bppARGB, &transparentBitmapData);
+    transparentBitmap->LockBits(&rect1, Gdiplus::ImageLockModeWrite, PixelFormat32bppARGB, &transparentBitmapData);
     BYTE* transparentPixels = (BYTE*) (void*) transparentBitmapData.Scan0;
 
     Gdiplus::BitmapData whiteBitmapData;
@@ -301,6 +301,36 @@ Gdiplus::Rect CalculateCrop(Gdiplus::Bitmap* transparentBitmap){
     return Gdiplus::Rect(leftcrop, topcrop, rightcrop, bottomcrop);
 }
 
+void CloneImage(Gdiplus::Bitmap* oldBitmap, Gdiplus::Bitmap* newBitmap){
+    //TODO: see if there's an equivalent of C#'s DrawImage
+    Gdiplus::Rect oldRect(0, 0, oldBitmap->GetWidth(), oldBitmap->GetHeight());
+    Gdiplus::Rect newRect(0, 0, newBitmap->GetWidth(), newBitmap->GetHeight());
+
+    Gdiplus::BitmapData newBitmapData;
+    newBitmap->LockBits(&newRect, Gdiplus::ImageLockModeWrite, PixelFormat32bppARGB, &newBitmapData);
+    BYTE* newPixels = (BYTE*) (void*) newBitmapData.Scan0;
+
+    Gdiplus::BitmapData oldBitmapData;
+    oldBitmap->LockBits(&oldRect, Gdiplus::ImageLockModeRead, PixelFormat32bppARGB, &oldBitmapData);
+    BYTE* oldPixels = (BYTE*) (void*) oldBitmapData.Scan0;
+
+    for(int x = 0; x < oldBitmap->GetWidth(); x++){
+        for(int y = 0; y < oldBitmap->GetHeight(); y++){
+            int oldPixel = (y*(oldBitmap->GetWidth()) + x)*4;
+            int newPixel = (y*(newBitmap->GetWidth()) + x)*4;
+
+            for(int z = 0; z < 4; z++)
+                newPixels[newPixel + z] = oldPixels[oldPixel + z];
+        }
+    }
+
+    newBitmap->UnlockBits(&newBitmapData);
+    oldBitmap->UnlockBits(&oldBitmapData);
+
+    //delete bitmap;
+    //&bitmap = &bmp;
+}
+
 void CaptureCompositeScreenshot(HINSTANCE hThisInstance, HWND whiteHwnd, HWND blackHwnd, bool creMode){
 
     std::cout << "Screenshot capture start: " << CurrentTimestamp() << std::endl;
@@ -396,6 +426,7 @@ void CaptureCompositeScreenshot(HINSTANCE hThisInstance, HWND whiteHwnd, HWND bl
     DifferentiateAlpha(&whiteShot, &blackShot, &transparentBitmap);
 
     Gdiplus::Bitmap transparentInactiveBitmap(whiteShot.GetWidth(), whiteShot.GetHeight(), PixelFormat32bppARGB);
+
     if(creMode)
         DifferentiateAlpha(&whiteInactiveShot, &blackInactiveShot, &transparentInactiveBitmap);
 
@@ -413,6 +444,25 @@ void CaptureCompositeScreenshot(HINSTANCE hThisInstance, HWND whiteHwnd, HWND bl
     std::cout << "Creating bitmaps: " << CurrentTimestamp() << std::endl;
     Gdiplus::Bitmap* croppedBitmap = transparentBitmap.Clone(crop, PixelFormatDontCare);
     Gdiplus::Bitmap* croppedInactive = transparentInactiveBitmap.Clone(crop, PixelFormatDontCare);
+
+    int imageWidth = croppedBitmap->GetWidth();
+    int imageHeight = croppedBitmap->GetHeight();
+    if(creMode){
+        if((imageWidth % 2 == 1))
+            imageWidth++;
+
+        if((imageHeight % 2 == 1))
+            imageHeight++;
+    }
+
+    Gdiplus::Bitmap* clonedBitmap = new Gdiplus::Bitmap(imageWidth, imageHeight, PixelFormat32bppARGB);
+    Gdiplus::Bitmap* clonedInactive = new Gdiplus::Bitmap(imageWidth, imageHeight, PixelFormat32bppARGB);
+    CloneImage(croppedBitmap, clonedBitmap);
+    CloneImage(croppedInactive, clonedInactive);
+
+    //Saving memory
+    delete croppedBitmap;
+    delete croppedInactive;
 
     //Saving the image
     std::cout << "Saving: " << CurrentTimestamp() << std::endl;
@@ -454,14 +504,14 @@ void CaptureCompositeScreenshot(HINSTANCE hThisInstance, HWND whiteHwnd, HWND bl
     std::wstring fileNameInactiveUtf16 = converter.from_bytes(fileNameInactive);
 
     std::wcout << fileNameUtf16 << std::endl << fileNameInactiveUtf16 << std::endl;
-    croppedBitmap->Save(fileNameUtf16.c_str(), &pngEncoder, NULL);
+    clonedBitmap->Save(fileNameUtf16.c_str(), &pngEncoder, NULL);
     if(creMode)
-        croppedInactive->Save(fileNameInactiveUtf16.c_str(), &pngEncoder, NULL);
+        clonedInactive->Save(fileNameInactiveUtf16.c_str(), &pngEncoder, NULL);
 
     std::cout << "Done: " << CurrentTimestamp() << std::endl;
     //Cleaning memory
-    delete croppedBitmap;
-    delete croppedInactive;
+    delete clonedBitmap;
+    delete clonedInactive;
 }
 
 int WINAPI WinMain (HINSTANCE hThisInstance,
