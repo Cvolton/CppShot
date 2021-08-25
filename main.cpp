@@ -23,6 +23,8 @@
 
 #define CPPSHOT_VERSION "0.2 - build: " __DATE__ " " __TIME__
 
+#define ERROR_TITLE "CppShot Error"
+
 #define DEFAULT_SAVE_DIRECTORY "C:\\test\\"
 
 /*  Declare Windows procedure  */
@@ -74,7 +76,7 @@ int GetEncoderClsid(const WCHAR* format, CLSID* pClsid)
     return -1;  // Failure
 }
 
-/*char* statusString(const Gdiplus::Status status) {
+char* statusString(const Gdiplus::Status status) {
     switch (status) {
         case Gdiplus::Ok: return "Ok";
         case Gdiplus::GenericError: return "GenericError";
@@ -98,7 +100,15 @@ int GetEncoderClsid(const WCHAR* format, CLSID* pClsid)
         case Gdiplus::PropertyNotSupported: return "PropertyNotSupported";
         default: return "Status Type Not Found.";
     }
-}*/
+}
+
+void DisplayGdiplusStatusError(const Gdiplus::Status status){
+    if(status == Gdiplus::Ok)
+        return;
+    char errorText[2048];
+    sprintf(errorText, "An error has occured while saving: %s", statusString(status));
+    MessageBox(NULL, errorText, ERROR_TITLE, 0x40010);
+}
 
 HWND createBackdropWindow(HINSTANCE hThisInstance, TCHAR className, HBRUSH backgroundBrush){
     HWND hwnd;               /* This is the handle for our window */
@@ -120,7 +130,7 @@ HWND createBackdropWindow(HINSTANCE hThisInstance, TCHAR className, HBRUSH backg
     wincl.hbrBackground = backgroundBrush;
 
     if (!RegisterClassEx (&wincl)){
-        MessageBox(NULL, "Unable to create backdrop window, the program may not work correctly.", "Error", 0);
+        MessageBox(NULL, "Unable to create backdrop window, the program may not work correctly.", ERROR_TITLE, 0x30);
         return NULL;
     }
 
@@ -504,9 +514,9 @@ void CaptureCompositeScreenshot(HINSTANCE hThisInstance, HWND whiteHwnd, HWND bl
     std::wstring fileNameInactiveUtf16 = converter.from_bytes(fileNameInactive);
 
     std::wcout << fileNameUtf16 << std::endl << fileNameInactiveUtf16 << std::endl;
-    clonedBitmap->Save(fileNameUtf16.c_str(), &pngEncoder, NULL);
+    DisplayGdiplusStatusError(clonedBitmap->Save(fileNameUtf16.c_str(), &pngEncoder, NULL));
     if(creMode)
-        clonedInactive->Save(fileNameInactiveUtf16.c_str(), &pngEncoder, NULL);
+        DisplayGdiplusStatusError(clonedInactive->Save(fileNameInactiveUtf16.c_str(), &pngEncoder, NULL));
 
     std::cout << "Done: " << CurrentTimestamp() << std::endl;
     //Cleaning memory

@@ -17,3 +17,21 @@
 	<string>
 	<sys/stat.h>
 
+1629913122 source:c:\users\brabe\documents\git\cppshot\main.cpp
+	<tchar.h>
+	<windows.h>
+	<winuser.h>
+	<stdio.h>
+	<wingdi.h>
+	<gdiplus.h>
+	<stdlib.h>
+	<sstream>
+	<string>
+	<iostream>
+	<vector>
+	<locale>
+	<codecvt>
+	<chrono>
+	<string>
+	<sys/stat.h>
+
