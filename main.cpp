@@ -268,6 +268,10 @@ void RemoveIllegalChars(std::string* str){
         if(found){
             *it = ' ';
         }
+
+        //TODO: temporary workaround (ascii vs unicode problems, should we drop windows 98 support?)
+        if(*it < 0)
+            *it = ' ';
     }
 }
 
@@ -414,12 +418,12 @@ void CaptureCompositeScreenshot(HINSTANCE hThisInstance, HWND whiteHwnd, HWND bl
     std::cout << "Capturing white: " << CurrentTimestamp() << std::endl;
     Gdiplus::Bitmap whiteShot(CaptureScreenArea(rct), NULL);
 
-    if(SAVE_INTERMEDIARY_IMAGES == true){
+    #if(SAVE_INTERMEDIARY_IMAGES)
         CLSID pngEncoderTemp = {0x557cf406, 0x1a04, 0x11d3, {0x9a, 0x73, 0x00, 0x00, 0xf8, 0x1e, 0xf3, 0x2e} } ;
         GetEncoderClsid(L"image/png", &pngEncoderTemp);
         whiteShot.Save(L"c:\\test\\0_whiteShot.png", &pngEncoderTemp, NULL);
         blackShot.Save(L"c:\\test\\0_blackShot.png", &pngEncoderTemp, NULL);
-    }
+    #endif
 
     //inactive capture
     if(creMode){
