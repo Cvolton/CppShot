@@ -217,7 +217,7 @@ HBITMAP CaptureScreenArea(RECT rct){
 }
 
 void WaitForColor(RECT rct, unsigned long color){
-    for(int x = 0; x < 10; x++){ //capping out at 330 ms, which is already fairly slow
+    for(int x = 0; x < 66; x++){ //capping out at 330 ms, which is already fairly slow
 
         RECT rctOnePx;
         rctOnePx.left = rct.left;
