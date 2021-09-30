@@ -4,8 +4,11 @@
     #define UNICODE
 #endif
 
-#include <tchar.h>
+#define _WIN32_IE 0x0300
+
 #include <windows.h>
+#include <commctrl.h>
+#include <tchar.h>
 #include <winuser.h>
 #include <stdio.h>
 #include <wingdi.h>
@@ -20,6 +23,8 @@
 #include <chrono>
 #include <string>
 #include <sys/stat.h>
+
+#include "resources.h"
 
 #define CPPSHOT_VERSION "0.3 - build: " __DATE__ " " __TIME__
 
@@ -543,6 +548,13 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
     MSG messages;            /* Here messages to the application are saved */
     WNDCLASSEX wincl;        /* Data structure for the windowclass */
 
+    INITCOMMONCONTROLSEX icc;
+
+    // Initialise common controls.
+    icc.dwSize = sizeof(icc);
+    icc.dwICC = ICC_WIN95_CLASSES;
+    InitCommonControlsEx(&icc);
+
     /* The Window structure */
     wincl.hInstance = hThisInstance;
     wincl.lpszClassName = szClassName;
@@ -551,14 +563,15 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
     wincl.cbSize = sizeof (WNDCLASSEX);
 
     /* Use default icon and mouse-pointer */
-    wincl.hIcon = LoadIcon (NULL, IDI_APPLICATION);
+    wincl.hIcon = (HICON) LoadImage(hThisInstance, MAKEINTRESOURCE(IDI_APPICON), IMAGE_ICON, 0, 0, LR_DEFAULTSIZE | LR_DEFAULTCOLOR | LR_SHARED);
     wincl.hIconSm = LoadIcon (NULL, IDI_APPLICATION);
     wincl.hCursor = LoadCursor (NULL, IDC_ARROW);
     wincl.lpszMenuName = NULL;                 /* No menu */
     wincl.cbClsExtra = 0;                      /* No extra bytes after the window class */
     wincl.cbWndExtra = 0;                      /* structure or the window instance */
     /* Use Windows's default colour as the background of the window */
-    wincl.hbrBackground = (HBRUSH) COLOR_BACKGROUND;
+    wincl.hbrBackground = (HBRUSH) (COLOR_BTNFACE + 1);
+    wincl.lpszMenuName  = MAKEINTRESOURCE(IDR_MAINMENU);
 
     /* Register the window class, and if it fails quit the program */
     if (!RegisterClassEx (&wincl))
@@ -662,6 +675,33 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
     return messages.wParam;
 }
 
+VOID StartExplorer()
+{
+   // additional information
+   STARTUPINFO si;
+   PROCESS_INFORMATION pi;
+
+   // set the size of the structures
+   ZeroMemory( &si, sizeof(si) );
+   si.cb = sizeof(si);
+   ZeroMemory( &pi, sizeof(pi) );
+
+  // start the program up
+  CreateProcess( NULL,   // the path
+    "explorer " DEFAULT_SAVE_DIRECTORY,        // Command line
+    NULL,           // Process handle not inheritable
+    NULL,           // Thread handle not inheritable
+    FALSE,          // Set handle inheritance to FALSE
+    0,              // No creation flags
+    NULL,           // Use parent's environment block
+    NULL,           // Use parent's starting directory
+    &si,            // Pointer to STARTUPINFO structure
+    &pi             // Pointer to PROCESS_INFORMATION structure (removed extra parentheses)
+    );
+    // Close process and thread handles.
+    CloseHandle( pi.hProcess );
+    CloseHandle( pi.hThread );
+}
 
 /*  This function is called by the Windows function DispatchMessage()  */
 
@@ -672,6 +712,24 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
         case WM_DESTROY:
             PostQuitMessage (0);       /* send a WM_QUIT to the message queue */
             break;
+
+        case WM_COMMAND:               /* menu items */
+          switch (LOWORD(wParam))
+          {
+            case ID_FILE_OPEN:
+            {
+              StartExplorer();
+              return 0;
+            }
+
+            case ID_FILE_EXIT:
+            {
+              DestroyWindow(hwnd);
+              return 0;
+            }
+          }
+          break;
+
         default:                      /* for messages that we don't deal with */
             return DefWindowProc (hwnd, message, wParam, lParam);
     }

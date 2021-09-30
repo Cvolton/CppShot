@@ -1,0 +1,5 @@
+#define ID_FILE_EXIT 1
+#define ID_FILE_OPEN 2
+#define IDI_APPICON 100
+#define IDR_MAINMENU 101
+#define IDD_DIALOG 102

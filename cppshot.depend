@@ -17,9 +17,10 @@
 	<string>
 	<sys/stat.h>
 
-1630025112 source:c:\users\brabe\documents\git\cppshot\main.cpp
-	<tchar.h>
+1633038275 source:c:\users\brabe\documents\git\cppshot\main.cpp
 	<windows.h>
+	<commctrl.h>
+	<tchar.h>
 	<winuser.h>
 	<stdio.h>
 	<wingdi.h>
@@ -34,4 +35,11 @@
 	<chrono>
 	<string>
 	<sys/stat.h>
+	"resources.h"
+
+1633038402 source:c:\users\brabe\documents\git\cppshot\resources.rc
+	<windows.h>
+	"resources.h"
+
+1633037381 c:\users\brabe\documents\git\cppshot\resources.h
 
