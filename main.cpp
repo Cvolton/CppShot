@@ -27,6 +27,8 @@
 
 #define DEFAULT_SAVE_DIRECTORY "C:\\test\\"
 
+#define SAVE_INTERMEDIARY_IMAGES 0
+
 /*  Declare Windows procedure  */
 LRESULT CALLBACK WindowProcedure (HWND, UINT, WPARAM, LPARAM);
 
@@ -173,7 +175,8 @@ void DifferentiateAlpha(Gdiplus::Bitmap* whiteShot, Gdiplus::Bitmap* blackShot, 
         for(int y = 0; y < whiteShot->GetHeight(); y++){
             int currentPixel = (y*(whiteShot->GetWidth()) + x)*4;
             //Setting alpha
-            transparentPixels[currentPixel+3] = ((blackPixels[currentPixel+2] - whitePixels[currentPixel+2] + 255 + blackPixels[currentPixel+1] - whitePixels[currentPixel+1] + 255 + blackPixels[currentPixel] - whitePixels[currentPixel] + 255) / 3);
+            int alphaPixel = ((blackPixels[currentPixel+2] - whitePixels[currentPixel+2] + 255 + blackPixels[currentPixel+1] - whitePixels[currentPixel+1] + 255 + blackPixels[currentPixel] - whitePixels[currentPixel] + 255) / 3);
+            transparentPixels[currentPixel+3] = alphaPixel > 255 ? 255 : alphaPixel;
             //Setting fully transparent pixels to 0
             transparentPixels[currentPixel+2] = 0;
             transparentPixels[currentPixel+1] = 0;
@@ -406,6 +409,13 @@ void CaptureCompositeScreenshot(HINSTANCE hThisInstance, HWND whiteHwnd, HWND bl
     std::cout << "Capturing white: " << CurrentTimestamp() << std::endl;
     Gdiplus::Bitmap whiteShot(CaptureScreenArea(rct), NULL);
 
+    if(SAVE_INTERMEDIARY_IMAGES == true){
+        CLSID pngEncoderTemp = {0x557cf406, 0x1a04, 0x11d3, {0x9a, 0x73, 0x00, 0x00, 0xf8, 0x1e, 0xf3, 0x2e} } ;
+        GetEncoderClsid(L"image/png", &pngEncoderTemp);
+        whiteShot.Save(L"c:\\test\\0_whiteShot.png", &pngEncoderTemp, NULL);
+        blackShot.Save(L"c:\\test\\0_blackShot.png", &pngEncoderTemp, NULL);
+    }
+
     //inactive capture
     if(creMode){
         SetForegroundWindow(desktopWindow);
@@ -603,6 +613,8 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
             0x42))  //0x42 is 'b'
         {
             _tprintf(_T("CTRL+b\n"));
+        }else{
+            MessageBox(NULL, "Unable to register the CTRL+B keyboard shortcut.", ERROR_TITLE, 0x10);
         }
 
     if (RegisterHotKey(
@@ -612,6 +624,8 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
             0x42))  //0x42 is 'b'
         {
             _tprintf(_T("CTRL+SHIFT+b\n"));
+        }else{
+            MessageBox(NULL, "Unable to register the CTRL+SHIFT+B keyboard shortcut.", ERROR_TITLE, 0x10);
         }
 
     /* Make the window visible on the screen */
