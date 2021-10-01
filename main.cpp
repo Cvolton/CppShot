@@ -27,7 +27,7 @@
 
 #include "resources.h"
 
-#define CPPSHOT_VERSION "0.3 - build: " __DATE__ " " __TIME__
+#define CPPSHOT_VERSION "0.4 - build: " __DATE__ " " __TIME__
 
 #define ERROR_TITLE "CppShot Error"
 
