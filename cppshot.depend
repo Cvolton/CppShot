@@ -17,7 +17,7 @@
 	<string>
 	<sys/stat.h>
 
-1633038598 source:c:\users\brabe\documents\git\cppshot\main.cpp
+1633087200 source:c:\users\brabe\documents\git\cppshot\main.cpp
 	<windows.h>
 	<commctrl.h>
 	<tchar.h>
@@ -34,6 +34,7 @@
 	<codecvt>
 	<chrono>
 	<string>
+	<cstring>
 	<sys/stat.h>
 	"resources.h"
 

@@ -22,6 +22,7 @@
 #include <codecvt>
 #include <chrono>
 #include <string>
+#include <cstring>
 #include <sys/stat.h>
 
 #include "resources.h"
@@ -50,6 +51,43 @@ inline bool FileExists (const std::string& name) {
 
 inline unsigned __int64 CurrentTimestamp() {
     return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+}
+
+std::string GetRegistry(LPCTSTR pszValueName, LPCTSTR defaultValue)
+{
+    // Try open registry key
+    HKEY hKey = NULL;
+    LPCTSTR pszSubkey = _T("SOFTWARE\\CppShot");
+    if ( RegOpenKey(HKEY_CURRENT_USER, pszSubkey, &hKey) != ERROR_SUCCESS )
+    {
+        std::cout << "Unable to open registry key" << std::endl;
+    }
+
+    // Buffer to store string read from registry
+    TCHAR szValue[1024];
+    DWORD cbValueLength = sizeof(szValue);
+
+    // Query string value
+    if ( RegQueryValueEx(
+            hKey,
+            pszValueName,
+            NULL,
+            NULL,
+            reinterpret_cast<LPBYTE>(&szValue),
+            &cbValueLength)
+         != ERROR_SUCCESS )
+    {
+        std::cout << "Unable to read registry value" << std::endl;
+        return std::string(defaultValue);
+    }
+
+    _tprintf(_T("getregistry: %s\n"), szValue);
+
+    return std::string(szValue);
+}
+
+std::string GetSaveDirectory(){
+    return GetRegistry("Path", DEFAULT_SAVE_DIRECTORY);
 }
 
 int GetEncoderClsid(const WCHAR* format, CLSID* pClsid)
@@ -507,12 +545,14 @@ void CaptureCompositeScreenshot(HINSTANCE hThisInstance, HWND whiteHwnd, HWND bl
     std::cout << windowTextStr << std::endl;
     //std::cout << std::endl << len;
 
-    CreateDirectory(DEFAULT_SAVE_DIRECTORY, NULL);
-    std::string path = DEFAULT_SAVE_DIRECTORY;
+    std::string path = GetSaveDirectory();
+    std::cout << "registrypath: " << path << std::endl;
+
+    CreateDirectory(path.c_str(), NULL);
     std::ostringstream pathbuild;
     std::ostringstream pathbuildInactive;
-    pathbuild << path << windowTextStr << "_b1.png";
-    pathbuildInactive << path << windowTextStr << "_b2.png";
+    pathbuild << path << "\\" << windowTextStr << "_b1.png";
+    pathbuildInactive << path << "\\" << windowTextStr << "_b2.png";
 
     std::string fileName = pathbuild.str();
     std::string fileNameInactive = pathbuildInactive.str();
@@ -681,6 +721,7 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
 
 VOID StartExplorer()
 {
+    std::string path = GetSaveDirectory();
    // additional information
    STARTUPINFO si;
    PROCESS_INFORMATION pi;
@@ -690,9 +731,12 @@ VOID StartExplorer()
    si.cb = sizeof(si);
    ZeroMemory( &pi, sizeof(pi) );
 
+   char commandLine[2048];
+   sprintf(commandLine, "explorer \"%s\"", path.c_str());
+
   // start the program up
   CreateProcess( NULL,   // the path
-    "explorer " DEFAULT_SAVE_DIRECTORY,        // Command line
+    commandLine,        // Command line
     NULL,           // Process handle not inheritable
     NULL,           // Thread handle not inheritable
     FALSE,          // Set handle inheritance to FALSE
