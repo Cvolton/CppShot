@@ -1,2 +1,5 @@
 bin/
 obj/
+cppshot.cbp
+cppshot.depend
+cppshot.layout
