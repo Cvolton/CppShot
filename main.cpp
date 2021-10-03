@@ -9,22 +9,22 @@
 
 #include <windows.h>
 #include <commctrl.h>
-#include <wchar.h>
+//#include <wchar.h>
 #include <tchar.h>
-#include <winuser.h>
-#include <stdio.h>
-#include <wingdi.h>
+//#include <winuser.h>
+//#include <stdio.h>
+//#include <wingdi.h>
 #include <gdiplus.h>
-#include <stdlib.h>
+//#include <stdlib.h>
 #include <sstream>
-#include <string>
+//#include <string>
 #include <iostream>
-#include <vector>
-#include <locale>
-#include <codecvt>
+//#include <vector>
+//#include <locale>
+//#include <codecvt>
 #include <chrono>
 #include <string>
-#include <cstring>
+//#include <cstring>
 #include <sys/stat.h>
 
 #include "resources.h"
