@@ -5,9 +5,11 @@
 #endif
 
 #define _WIN32_IE 0x0300
+#undef __STRICT_ANSI__ 
 
 #include <windows.h>
 #include <commctrl.h>
+#include <wchar.h>
 #include <tchar.h>
 #include <winuser.h>
 #include <stdio.h>
@@ -27,11 +29,11 @@
 
 #include "resources.h"
 
-#define CPPSHOT_VERSION "0.4 - build: " __DATE__ " " __TIME__
+#define CPPSHOT_VERSION L"0.4 - build: " __DATE__ " " __TIME__
 
-#define ERROR_TITLE "CppShot Error"
+#define ERROR_TITLE L"CppShot Error"
 
-#define DEFAULT_SAVE_DIRECTORY "C:\\test\\"
+#define DEFAULT_SAVE_DIRECTORY L"C:\\test\\"
 
 #define SAVE_INTERMEDIARY_IMAGES 0
 
@@ -44,16 +46,17 @@ TCHAR blackBackdropClassName[ ] = _T("BlackBackdropWindow");
 TCHAR whiteBackdropClassName[ ] = _T("WhiteBackdropWindow");
 TCHAR transparentBackdropClassName[ ] = _T("TransparentBackdropWindow");
 
-inline bool FileExists (const std::string& name) {
+inline bool FileExists (const std::wstring& name) {
+  std::string name_string(name.begin(), name.end());
   struct stat buffer;
-  return (stat (name.c_str(), &buffer) == 0);
+  return (stat (name_string.c_str(), &buffer) == 0);
 }
 
 inline unsigned __int64 CurrentTimestamp() {
     return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 }
 
-std::string GetRegistry(LPCTSTR pszValueName, LPCTSTR defaultValue)
+std::wstring GetRegistry(LPCTSTR pszValueName, LPCTSTR defaultValue)
 {
     // Try open registry key
     HKEY hKey = NULL;
@@ -78,16 +81,16 @@ std::string GetRegistry(LPCTSTR pszValueName, LPCTSTR defaultValue)
          != ERROR_SUCCESS )
     {
         std::cout << "Unable to read registry value" << std::endl;
-        return std::string(defaultValue);
+        return std::wstring(defaultValue);
     }
 
     _tprintf(_T("getregistry: %s\n"), szValue);
 
-    return std::string(szValue);
+    return std::wstring(szValue);
 }
 
-std::string GetSaveDirectory(){
-    return GetRegistry("Path", DEFAULT_SAVE_DIRECTORY);
+std::wstring GetSaveDirectory(){
+    return GetRegistry(L"Path", DEFAULT_SAVE_DIRECTORY);
 }
 
 int GetEncoderClsid(const WCHAR* format, CLSID* pClsid)
@@ -121,37 +124,37 @@ int GetEncoderClsid(const WCHAR* format, CLSID* pClsid)
     return -1;  // Failure
 }
 
-char* statusString(const Gdiplus::Status status) {
+wchar_t* statusString(const Gdiplus::Status status) {
     switch (status) {
-        case Gdiplus::Ok: return "Ok";
-        case Gdiplus::GenericError: return "GenericError";
-        case Gdiplus::InvalidParameter: return "InvalidParameter";
-        case Gdiplus::OutOfMemory: return "OutOfMemory";
-        case Gdiplus::ObjectBusy: return "ObjectBusy";
-        case Gdiplus::InsufficientBuffer: return "InsufficientBuffer";
-        case Gdiplus::NotImplemented: return "NotImplemented";
-        case Gdiplus::Win32Error: return "Win32Error";
-        case Gdiplus::Aborted: return "Aborted";
-        case Gdiplus::FileNotFound: return "FileNotFound";
-        case Gdiplus::ValueOverflow: return "ValueOverflow";
-        case Gdiplus::AccessDenied: return "AccessDenied";
-        case Gdiplus::UnknownImageFormat: return "UnknownImageFormat";
-        case Gdiplus::FontFamilyNotFound: return "FontFamilyNotFound";
-        case Gdiplus::FontStyleNotFound: return "FontStyleNotFound";
-        case Gdiplus::NotTrueTypeFont: return "NotTrueTypeFont";
-        case Gdiplus::UnsupportedGdiplusVersion: return "UnsupportedGdiplusVersion";
-        case Gdiplus::GdiplusNotInitialized: return "GdiplusNotInitialized";
-        case Gdiplus::PropertyNotFound: return "PropertyNotFound";
-        case Gdiplus::PropertyNotSupported: return "PropertyNotSupported";
-        default: return "Status Type Not Found.";
+        case Gdiplus::Ok: return L"Ok";
+        case Gdiplus::GenericError: return L"GenericError";
+        case Gdiplus::InvalidParameter: return L"InvalidParameter";
+        case Gdiplus::OutOfMemory: return L"OutOfMemory";
+        case Gdiplus::ObjectBusy: return L"ObjectBusy";
+        case Gdiplus::InsufficientBuffer: return L"InsufficientBuffer";
+        case Gdiplus::NotImplemented: return L"NotImplemented";
+        case Gdiplus::Win32Error: return L"Win32Error";
+        case Gdiplus::Aborted: return L"Aborted";
+        case Gdiplus::FileNotFound: return L"FileNotFound";
+        case Gdiplus::ValueOverflow: return L"ValueOverflow";
+        case Gdiplus::AccessDenied: return L"AccessDenied";
+        case Gdiplus::UnknownImageFormat: return L"UnknownImageFormat";
+        case Gdiplus::FontFamilyNotFound: return L"FontFamilyNotFound";
+        case Gdiplus::FontStyleNotFound: return L"FontStyleNotFound";
+        case Gdiplus::NotTrueTypeFont: return L"NotTrueTypeFont";
+        case Gdiplus::UnsupportedGdiplusVersion: return L"UnsupportedGdiplusVersion";
+        case Gdiplus::GdiplusNotInitialized: return L"GdiplusNotInitialized";
+        case Gdiplus::PropertyNotFound: return L"PropertyNotFound";
+        case Gdiplus::PropertyNotSupported: return L"PropertyNotSupported";
+        default: return L"Status Type Not Found.";
     }
 }
 
 void DisplayGdiplusStatusError(const Gdiplus::Status status){
     if(status == Gdiplus::Ok)
         return;
-    char errorText[2048];
-    sprintf(errorText, "An error has occured while saving: %s", statusString(status));
+    wchar_t errorText[2048];
+    _stprintf(errorText, L"An error has occured while saving: %s", statusString(status));
     MessageBox(NULL, errorText, ERROR_TITLE, 0x40010);
 }
 
@@ -175,7 +178,7 @@ HWND createBackdropWindow(HINSTANCE hThisInstance, TCHAR className, HBRUSH backg
     wincl.hbrBackground = backgroundBrush;
 
     if (!RegisterClassEx (&wincl)){
-        MessageBox(NULL, "Unable to create backdrop window, the program may not work correctly.", ERROR_TITLE, 0x30);
+        MessageBox(NULL, L"Unable to create backdrop window, the program may not work correctly.", ERROR_TITLE, 0x30);
         return NULL;
     }
 
@@ -298,18 +301,14 @@ void WaitForColor(RECT rct, unsigned long color){
     }
 }
 
-void RemoveIllegalChars(std::string* str){
-    std::string::iterator it;
-    std::string illegalChars = "\\/:?\"<>|*";
+void RemoveIllegalChars(std::wstring* str){
+    std::wstring::iterator it;
+    std::wstring illegalChars = L"\\/:?\"<>|*";
     for (it = str->begin() ; it < str->end() ; ++it){
         bool found = illegalChars.find(*it) != std::string::npos;
         if(found){
             *it = ' ';
         }
-
-        //TODO: temporary workaround (ascii vs unicode problems, should we drop windows 98 support?)
-        if(*it < 0)
-            *it = ' ';
     }
 }
 
@@ -397,8 +396,8 @@ void CaptureCompositeScreenshot(HINSTANCE hThisInstance, HWND whiteHwnd, HWND bl
 
     HWND desktopWindow = GetDesktopWindow();
     HWND foregoundWindow = GetForegroundWindow();
-    HWND taskbar = FindWindow("Shell_TrayWnd", NULL);
-    HWND startButton = FindWindow("Button", "Start");
+    HWND taskbar = FindWindow(L"Shell_TrayWnd", NULL);
+    HWND startButton = FindWindow(L"Button", L"Start");
 
     //hiding the taskbar in case it gets in the way
     //note that this may cause issues if the program crashes during capture
@@ -504,7 +503,7 @@ void CaptureCompositeScreenshot(HINSTANCE hThisInstance, HWND whiteHwnd, HWND bl
     if(crop.GetLeft() == crop.GetRight() || crop.GetTop() == crop.GetBottom()){
         ShowWindow (whiteHwnd, 0);
         ShowWindow (blackHwnd, 0);
-        MessageBox(whiteHwnd, "Screenshot is empty, aborting capture.", "Error", MB_OK | MB_ICONSTOP);
+        MessageBox(whiteHwnd, L"Screenshot is empty, aborting capture.", L"Error", MB_OK | MB_ICONSTOP);
         return;
     }
 
@@ -536,46 +535,46 @@ void CaptureCompositeScreenshot(HINSTANCE hThisInstance, HWND whiteHwnd, HWND bl
     CLSID pngEncoder = {0x557cf406, 0x1a04, 0x11d3, {0x9a, 0x73, 0x00, 0x00, 0xf8, 0x1e, 0xf3, 0x2e} } ;
     GetEncoderClsid(L"image/png", &pngEncoder);
 
-    char h[2048];
+    TCHAR h[2048];
     GetWindowText(foregoundWindow, h, 2048);
-    std::string windowTextStr(h);
+    std::wstring windowTextStr(h);
 
     RemoveIllegalChars(&windowTextStr);
 
-    std::cout << windowTextStr << std::endl;
+    std::wcout << windowTextStr << std::endl;
     //std::cout << std::endl << len;
 
-    std::string path = GetSaveDirectory();
-    std::cout << "registrypath: " << path << std::endl;
+    std::wstring path = GetSaveDirectory();
+    std::wcout << L"registrypath: " << path << std::endl;
 
     CreateDirectory(path.c_str(), NULL);
-    std::ostringstream pathbuild;
-    std::ostringstream pathbuildInactive;
-    pathbuild << path << "\\" << windowTextStr << "_b1.png";
-    pathbuildInactive << path << "\\" << windowTextStr << "_b2.png";
+    std::wstringstream pathbuild;
+    std::wstringstream pathbuildInactive;
+    pathbuild << path << L"\\" << windowTextStr << L"_b1.png";
+    pathbuildInactive << path << L"\\" << windowTextStr << L"_b2.png";
 
-    std::string fileName = pathbuild.str();
-    std::string fileNameInactive = pathbuildInactive.str();
+    std::wstring fileName = pathbuild.str();
+    std::wstring fileNameInactive = pathbuildInactive.str();
 
     unsigned int i = 0;
     while(FileExists(fileName) | FileExists(fileNameInactive)){
-        pathbuild.str("");
-        pathbuildInactive.str("");
-        pathbuild << path << windowTextStr << "_" << i << "_b1.png";
-        pathbuildInactive << path << windowTextStr << "_" << i << "_b2.png";
+        pathbuild.str(L"");
+        pathbuildInactive.str(L"");
+        pathbuild << path << windowTextStr << L"_" << i << L"_b1.png";
+        pathbuildInactive << path << windowTextStr << L"_" << i << L"_b2.png";
         fileName = pathbuild.str();
         fileNameInactive = pathbuildInactive.str();
         i++;
     }
 
-    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+    /*std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
     std::wstring fileNameUtf16 = converter.from_bytes(fileName);
-    std::wstring fileNameInactiveUtf16 = converter.from_bytes(fileNameInactive);
+    std::wstring fileNameInactiveUtf16 = converter.from_bytes(fileNameInactive);*/
 
-    std::wcout << fileNameUtf16 << std::endl << fileNameInactiveUtf16 << std::endl;
-    DisplayGdiplusStatusError(clonedBitmap->Save(fileNameUtf16.c_str(), &pngEncoder, NULL));
+    std::wcout << fileName << std::endl << fileNameInactive << std::endl;
+    DisplayGdiplusStatusError(clonedBitmap->Save(fileName.c_str(), &pngEncoder, NULL));
     if(creMode)
-        DisplayGdiplusStatusError(clonedInactive->Save(fileNameInactiveUtf16.c_str(), &pngEncoder, NULL));
+        DisplayGdiplusStatusError(clonedInactive->Save(fileNameInactive.c_str(), &pngEncoder, NULL));
 
     std::cout << "Done: " << CurrentTimestamp() << std::endl;
     //Cleaning memory
@@ -638,8 +637,8 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
            );
 
     HWND hwndButton = CreateWindow(
-            "BUTTON",  // Predefined class; Unicode assumed
-            "This button doesn't do anything, press CTRL+B to take a screenshot",      // Button text
+            L"BUTTON",  // Predefined class; Unicode assumed
+            L"This button doesn't do anything, press CTRL+B to take a screenshot",      // Button text
             WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,  // Styles
             10,         // x position
             10,         // y position
@@ -651,8 +650,8 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
             NULL);      // Pointer not needed.
 
      HWND hwndButtonTwo = CreateWindow(
-            "BUTTON",  // Predefined class; Unicode assumed
-            "Or you can press CTRL+SHIFT+B to take inactive and active screenshots",      // Button text
+            L"BUTTON",  // Predefined class; Unicode assumed
+            L"Or you can press CTRL+SHIFT+B to take inactive and active screenshots",      // Button text
             WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,  // Styles
             10,         // x position
             120,         // y position
@@ -671,7 +670,7 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
         {
             _tprintf(_T("CTRL+b\n"));
         }else{
-            MessageBox(NULL, "Unable to register the CTRL+B keyboard shortcut.", ERROR_TITLE, 0x10);
+            MessageBox(NULL, L"Unable to register the CTRL+B keyboard shortcut.", ERROR_TITLE, 0x10);
         }
 
     if (RegisterHotKey(
@@ -682,7 +681,7 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
         {
             _tprintf(_T("CTRL+SHIFT+b\n"));
         }else{
-            MessageBox(NULL, "Unable to register the CTRL+SHIFT+B keyboard shortcut.", ERROR_TITLE, 0x10);
+            MessageBox(NULL, L"Unable to register the CTRL+SHIFT+B keyboard shortcut.", ERROR_TITLE, 0x10);
         }
 
     /* Make the window visible on the screen */
@@ -721,7 +720,7 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
 
 VOID StartExplorer()
 {
-    std::string path = GetSaveDirectory();
+    std::wstring path = GetSaveDirectory();
    // additional information
    STARTUPINFO si;
    PROCESS_INFORMATION pi;
@@ -731,8 +730,8 @@ VOID StartExplorer()
    si.cb = sizeof(si);
    ZeroMemory( &pi, sizeof(pi) );
 
-   char commandLine[2048];
-   sprintf(commandLine, "explorer \"%s\"", path.c_str());
+   TCHAR commandLine[2048];
+   _stprintf(commandLine, L"explorer \"%s\"", path.c_str());
 
   // start the program up
   CreateProcess( NULL,   // the path
