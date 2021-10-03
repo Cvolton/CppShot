@@ -1,7 +1,7 @@
 all: bin/cppshot.exe
 
 bin/cppshot.exe: obj/main.o obj/resources.res
-	g++ -o bin/cppshot.exe obj/main.o  obj/resources.res -unicode -lgdiplus  -lgdi32 -luser32 -lkernel32 -lcomctl32
+	g++ -o bin/cppshot.exe obj/main.o  obj/resources.res -l:lib/libunicows.a -lgdiplus -lgdi32 -luser32 -lkernel32 -lcomctl32 
 
 obj/main.o: main.cpp resources.h
 	g++ -Wall -g -std=c++11  -DUNICODE=1 -c main.cpp -o obj/main.o
