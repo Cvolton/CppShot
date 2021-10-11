@@ -35,7 +35,7 @@
 
 #define DEFAULT_SAVE_DIRECTORY L"C:\\test\\"
 
-#define SAVE_INTERMEDIARY_IMAGES 1
+#define SAVE_INTERMEDIARY_IMAGES 0
 
 /*  Declare Windows procedure  */
 LRESULT CALLBACK WindowProcedure (HWND, UINT, WPARAM, LPARAM);
