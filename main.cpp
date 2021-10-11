@@ -55,6 +55,10 @@ inline unsigned __int64 CurrentTimestamp() {
     return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 }
 
+inline BYTE ToByte(int value){
+    return value > 255 ? 255 : value;
+}
+
 std::wstring GetRegistry(LPCTSTR pszValueName, LPCTSTR defaultValue)
 {
     // Try open registry key
@@ -220,16 +224,15 @@ void DifferentiateAlpha(Gdiplus::Bitmap* whiteShot, Gdiplus::Bitmap* blackShot, 
         for(unsigned int y = 0; y < whiteShot->GetHeight(); y++){
             unsigned int currentPixel = (y*(whiteShot->GetWidth()) + x)*4;
             //Setting alpha
-            unsigned int alphaPixel = ((blackPixels[currentPixel+2] - whitePixels[currentPixel+2] + 255 + blackPixels[currentPixel+1] - whitePixels[currentPixel+1] + 255 + blackPixels[currentPixel] - whitePixels[currentPixel] + 255) / 3);
-            transparentPixels[currentPixel+3] = alphaPixel > 255 ? 255 : alphaPixel;
+            transparentPixels[currentPixel+3] = ToByte((blackPixels[currentPixel+2] - whitePixels[currentPixel+2] + 255 + blackPixels[currentPixel+1] - whitePixels[currentPixel+1] + 255 + blackPixels[currentPixel] - whitePixels[currentPixel] + 255) / 3);
             //Setting fully transparent pixels to 0
             transparentPixels[currentPixel+2] = 0;
             transparentPixels[currentPixel+1] = 0;
             transparentPixels[currentPixel] = 0;
             if(transparentPixels[currentPixel+3] > 0){
-                transparentPixels[currentPixel+2] = (255 * blackPixels[currentPixel+2] / transparentPixels[currentPixel+3]); //RED
-                transparentPixels[currentPixel+1] = (255 * blackPixels[currentPixel+1] / transparentPixels[currentPixel+3]); //GREEN
-                transparentPixels[currentPixel] = (255 * blackPixels[currentPixel] / transparentPixels[currentPixel+3]); //BLUE
+                transparentPixels[currentPixel+2] = ToByte(255 * blackPixels[currentPixel+2] / transparentPixels[currentPixel+3]); //RED
+                transparentPixels[currentPixel+1] = ToByte(255 * blackPixels[currentPixel+1] / transparentPixels[currentPixel+3]); //GREEN
+                transparentPixels[currentPixel] = ToByte(255 * blackPixels[currentPixel] / transparentPixels[currentPixel+3]); //BLUE
             }
         }
     }
