@@ -29,7 +29,7 @@
 
 #include "resources.h"
 
-#define CPPSHOT_VERSION L"0.4 - build: " __DATE__ " " __TIME__
+#define CPPSHOT_VERSION L"0.5 - build: " __DATE__ " " __TIME__
 
 #define ERROR_TITLE L"CppShot Error"
 

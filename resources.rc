@@ -35,12 +35,12 @@ BEGIN
     BEGIN
       VALUE "CompanyName", "Cvolton"
       VALUE "FileDescription", "CppShot"
-      VALUE "FileVersion", "0.4.0.0"
+      VALUE "FileVersion", "0.5.0.0"
       VALUE "InternalName", "cppshot"
       VALUE "LegalCopyright", "©2021 Cvolton"
       VALUE "OriginalFilename", "cppshot.exe"
       VALUE "ProductName", "CppShot"
-      VALUE "ProductVersion", "0.4.0.0"
+      VALUE "ProductVersion", "0.5.0.0"
     END
   END
   BLOCK "VarFileInfo"
