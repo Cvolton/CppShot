@@ -123,7 +123,7 @@ int GetEncoderClsid(const WCHAR* format, CLSID* pClsid)
     return -1;  // Failure
 }
 
-wchar_t* statusString(const Gdiplus::Status status) {
+const wchar_t* statusString(const Gdiplus::Status status) {
     switch (status) {
         case Gdiplus::Ok: return L"Ok";
         case Gdiplus::GenericError: return L"GenericError";
@@ -216,11 +216,11 @@ void DifferentiateAlpha(Gdiplus::Bitmap* whiteShot, Gdiplus::Bitmap* blackShot, 
     blackShot->LockBits(&rect1, Gdiplus::ImageLockModeRead, PixelFormat32bppARGB, &blackBitmapData);
     BYTE* blackPixels = (BYTE*) (void*) blackBitmapData.Scan0;
 
-    for(int x = 0; x < whiteShot->GetWidth(); x++){
-        for(int y = 0; y < whiteShot->GetHeight(); y++){
-            int currentPixel = (y*(whiteShot->GetWidth()) + x)*4;
+    for(unsigned int x = 0; x < whiteShot->GetWidth(); x++){
+        for(unsigned int y = 0; y < whiteShot->GetHeight(); y++){
+            unsigned int currentPixel = (y*(whiteShot->GetWidth()) + x)*4;
             //Setting alpha
-            int alphaPixel = ((blackPixels[currentPixel+2] - whitePixels[currentPixel+2] + 255 + blackPixels[currentPixel+1] - whitePixels[currentPixel+1] + 255 + blackPixels[currentPixel] - whitePixels[currentPixel] + 255) / 3);
+            unsigned int alphaPixel = ((blackPixels[currentPixel+2] - whitePixels[currentPixel+2] + 255 + blackPixels[currentPixel+1] - whitePixels[currentPixel+1] + 255 + blackPixels[currentPixel] - whitePixels[currentPixel] + 255) / 3);
             transparentPixels[currentPixel+3] = alphaPixel > 255 ? 255 : alphaPixel;
             //Setting fully transparent pixels to 0
             transparentPixels[currentPixel+2] = 0;
@@ -335,6 +335,10 @@ Gdiplus::Rect CalculateCrop(Gdiplus::Bitmap* transparentBitmap){
         }
     }
 
+    //"temporary" workaround until I have time to analyze why the actual algo cuts the image one pixel short
+    rightcrop++;
+    bottomcrop++;
+
     transparentBitmap->UnlockBits(&transparentBitmapData);
 
     if(leftcrop >= rightcrop || topcrop >= bottomcrop){
@@ -343,14 +347,6 @@ Gdiplus::Rect CalculateCrop(Gdiplus::Bitmap* transparentBitmap){
 
     bottomcrop -= topcrop;
     rightcrop -= leftcrop;
-
-    /*if(creMode){
-        //if((rightcrop % 2 == 1) && rightcrop != rct.right)
-            rightcrop++;
-
-        //if((bottomcrop % 2 == 1) && bottomcrop != rct.bottom)
-            bottomcrop++;
-    }*/
 
     printf("%i ; %i ; %i ; %i", leftcrop, topcrop, rightcrop, bottomcrop);
     return Gdiplus::Rect(leftcrop, topcrop, rightcrop, bottomcrop);
@@ -369,12 +365,12 @@ void CloneImage(Gdiplus::Bitmap* oldBitmap, Gdiplus::Bitmap* newBitmap){
     oldBitmap->LockBits(&oldRect, Gdiplus::ImageLockModeRead, PixelFormat32bppARGB, &oldBitmapData);
     BYTE* oldPixels = (BYTE*) (void*) oldBitmapData.Scan0;
 
-    for(int x = 0; x < oldBitmap->GetWidth(); x++){
-        for(int y = 0; y < oldBitmap->GetHeight(); y++){
-            int oldPixel = (y*(oldBitmap->GetWidth()) + x)*4;
-            int newPixel = (y*(newBitmap->GetWidth()) + x)*4;
+    for(unsigned int x = 0; x < oldBitmap->GetWidth(); x++){
+        for(unsigned int y = 0; y < oldBitmap->GetHeight(); y++){
+            unsigned int oldPixel = (y*(oldBitmap->GetWidth()) + x)*4;
+            unsigned int newPixel = (y*(newBitmap->GetWidth()) + x)*4;
 
-            for(int z = 0; z < 4; z++)
+            for(unsigned int z = 0; z < 4; z++)
                 newPixels[newPixel + z] = oldPixels[oldPixel + z];
         }
     }
