@@ -245,7 +245,7 @@ HBITMAP CaptureScreenArea(RECT rct){
     HBITMAP hbitmap = CreateCompatibleBitmap(hdc, rct.right - rct.left, rct.bottom - rct.top);
     
     SelectObject(memdc, hbitmap);
-    BitBlt(memdc, 0, 0, rct.right - rct.left, rct.bottom - rct.top, hdc, rct.left, rct.top, SRCCOPY )
+    BitBlt(memdc, 0, 0, rct.right - rct.left, rct.bottom - rct.top, hdc, rct.left, rct.top, SRCCOPY );
 
     DeleteDC(memdc);
     ReleaseDC(HWND_DESKTOP, hdc);
