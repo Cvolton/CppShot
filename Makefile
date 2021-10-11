@@ -32,14 +32,6 @@ RELEXE = $(BINDIR)/$(RELDIR)/$(EXE)
 RELOBJS = $(addprefix $(OBJDIR)/$(RELDIR)/, $(OBJS))
 RELCFLAGS = -O2 -s -DNDEBUG -mwindows
 
-#
-# Backslash variants
-#
-RELEXEBACKSLASH = $(RELEXE:/=\)
-RELOBJSBACKSLASH = $(RELOBJS:/=\)
-DBGEXEBACKSLASH = $(DBGEXE:/=\)
-DBGOBJSBACKSLASH = $(DBGOBJS:/=\)
-
 .PHONY: all clean debug prep release remake
 
 # Default build
