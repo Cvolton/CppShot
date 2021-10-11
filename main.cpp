@@ -561,8 +561,8 @@ void CaptureCompositeScreenshot(HINSTANCE hThisInstance, HWND whiteHwnd, HWND bl
     while(FileExists(fileName) | FileExists(fileNameInactive)){
         pathbuild.str(L"");
         pathbuildInactive.str(L"");
-        pathbuild << path << windowTextStr << L"_" << i << L"_b1.png";
-        pathbuildInactive << path << windowTextStr << L"_" << i << L"_b2.png";
+        pathbuild << path << L"\\" << windowTextStr << L"_" << i << L"_b1.png";
+        pathbuildInactive << path << L"\\" << windowTextStr << L"_" << i << L"_b2.png";
         fileName = pathbuild.str();
         fileNameInactive = pathbuildInactive.str();
         i++;
