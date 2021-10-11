@@ -35,7 +35,7 @@
 
 #define DEFAULT_SAVE_DIRECTORY L"C:\\test\\"
 
-#define SAVE_INTERMEDIARY_IMAGES 0
+#define SAVE_INTERMEDIARY_IMAGES 1
 
 /*  Declare Windows procedure  */
 LRESULT CALLBACK WindowProcedure (HWND, UINT, WPARAM, LPARAM);
@@ -245,16 +245,17 @@ HBITMAP CaptureScreenArea(RECT rct){
     HDC memdc = CreateCompatibleDC(hdc);
     HBITMAP hbitmap = CreateCompatibleBitmap(hdc, rct.right - rct.left, rct.bottom - rct.top);
     HBITMAP oldbmp = (HBITMAP)SelectObject(memdc, hbitmap);
-    BitBlt(memdc, 0, 0, rct.right - rct.left, rct.bottom - rct.top, hdc, rct.left, rct.top, SRCCOPY | CAPTUREBLT);
+    if(!BitBlt(memdc, 0, 0, rct.right - rct.left, rct.bottom - rct.top, hdc, rct.left, rct.top, SRCCOPY | CAPTUREBLT))
+        MessageBox(NULL, L"BitBlt failed.", L"Error", MB_OK | MB_ICONSTOP);
     SelectObject(memdc, oldbmp);
 
-    HBITMAP hbitmapCopy = (HBITMAP) CopyImage(hbitmap, IMAGE_BITMAP, 0, 0, LR_DEFAULTSIZE);
+    //HBITMAP hbitmapCopy = (HBITMAP) CopyImage(hbitmap, IMAGE_BITMAP, 0, 0, LR_DEFAULTSIZE);
 
-    DeleteObject(hbitmap);
+    //DeleteObject(hbitmap);
     DeleteDC(memdc);
     ReleaseDC(HWND_DESKTOP, hdc);
 
-    return hbitmapCopy;
+    return hbitmap;
 }
 
 void WaitForColor(RECT rct, unsigned long color){
