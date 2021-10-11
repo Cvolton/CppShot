@@ -44,7 +44,6 @@ LRESULT CALLBACK WindowProcedure (HWND, UINT, WPARAM, LPARAM);
 TCHAR szClassName[ ] = _T("MainCreWindow");
 TCHAR blackBackdropClassName[ ] = _T("BlackBackdropWindow");
 TCHAR whiteBackdropClassName[ ] = _T("WhiteBackdropWindow");
-TCHAR transparentBackdropClassName[ ] = _T("TransparentBackdropWindow");
 
 inline bool FileExists (const std::wstring& name) {
   std::string name_string(name.begin(), name.end());
