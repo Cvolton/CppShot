@@ -243,14 +243,10 @@ HBITMAP CaptureScreenArea(RECT rct){
     HDC hdc = GetDC(HWND_DESKTOP);
     HDC memdc = CreateCompatibleDC(hdc);
     HBITMAP hbitmap = CreateCompatibleBitmap(hdc, rct.right - rct.left, rct.bottom - rct.top);
-    HBITMAP oldbmp = (HBITMAP)SelectObject(memdc, hbitmap);
-    if(!BitBlt(memdc, 0, 0, rct.right - rct.left, rct.bottom - rct.top, hdc, rct.left, rct.top, SRCCOPY | CAPTUREBLT))
-        MessageBox(NULL, L"BitBlt failed.", L"Error", MB_OK | MB_ICONSTOP);
-    SelectObject(memdc, oldbmp);
+    
+    SelectObject(memdc, hbitmap);
+    BitBlt(memdc, 0, 0, rct.right - rct.left, rct.bottom - rct.top, hdc, rct.left, rct.top, SRCCOPY )
 
-    //HBITMAP hbitmapCopy = (HBITMAP) CopyImage(hbitmap, IMAGE_BITMAP, 0, 0, LR_DEFAULTSIZE);
-
-    //DeleteObject(hbitmap);
     DeleteDC(memdc);
     ReleaseDC(HWND_DESKTOP, hdc);
 
