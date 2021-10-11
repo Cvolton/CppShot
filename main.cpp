@@ -5,7 +5,7 @@
 #endif
 
 #define _WIN32_IE 0x0300
-#undef __STRICT_ANSI__ 
+#undef __STRICT_ANSI__
 
 #include <windows.h>
 #include <commctrl.h>
@@ -246,7 +246,7 @@ HBITMAP CaptureScreenArea(RECT rct){
     HDC hdc = GetDC(HWND_DESKTOP);
     HDC memdc = CreateCompatibleDC(hdc);
     HBITMAP hbitmap = CreateCompatibleBitmap(hdc, rct.right - rct.left, rct.bottom - rct.top);
-    
+
     SelectObject(memdc, hbitmap);
     BitBlt(memdc, 0, 0, rct.right - rct.left, rct.bottom - rct.top, hdc, rct.left, rct.top, SRCCOPY );
 
