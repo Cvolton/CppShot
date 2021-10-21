@@ -69,10 +69,10 @@ $(OBJDIR)/$(RELDIR)/%.res: %.rc
 # Other rules
 #
 prep:
-	@cmd /c "if not exist $(OBJDIR)/$(DBGDIR) mkdir $(OBJDIR)/$(DBGDIR)"
-	@cmd /c "if not exist $(OBJDIR)/$(RELDIR) mkdir $(OBJDIR)/$(RELDIR)"
-	@cmd /c "if not exist $(BINDIR)/$(DBGDIR) mkdir $(BINDIR)/$(DBGDIR)"
-	@cmd /c "if not exist $(BINDIR)/$(RELDIR) mkdir $(BINDIR)/$(RELDIR)"
+	@cmd /c "if not exist $(OBJDIR)\\$(DBGDIR) mkdir $(OBJDIR)\\$(DBGDIR)"
+	@cmd /c "if not exist $(OBJDIR)\\$(RELDIR) mkdir $(OBJDIR)\\$(RELDIR)"
+	@cmd /c "if not exist $(BINDIR)\\$(DBGDIR) mkdir $(BINDIR)\\$(DBGDIR)"
+	@cmd /c "if not exist $(BINDIR)\\$(RELDIR) mkdir $(BINDIR)\\$(RELDIR)"
 
 remake: clean all
 
