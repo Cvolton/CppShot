@@ -425,7 +425,12 @@ void CaptureCompositeScreenshot(HINSTANCE hThisInstance, HWND whiteHwnd, HWND bl
     }
     SetWindowPos(whiteHwnd, blackHwnd, rct.left, rct.top, rct.right - rct.left, rct.bottom - rct.top, SWP_NOACTIVATE);
 
+    std::cout << "Additional white flash: " << CurrentTimestamp() << std::endl;
+    ShowWindow (whiteHwnd, SW_SHOWNOACTIVATE);
+    WaitForColor(rct, RGB(255,255,255));
+
     ShowWindow (blackHwnd, SW_SHOWNOACTIVATE);
+    ShowWindow (whiteHwnd, 0);
 
     //taking the screenshot
     WaitForColor(rct, RGB(0,0,0));
