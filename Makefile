@@ -2,7 +2,7 @@
 # Compiler flags
 #
 CC	 = g++
-CFLAGS = -Wall -std=c++11 -DUNICODE=1
+CFLAGS = -Wall -std=c++14 -DUNICODE=1
 LFLAGS = -lgdiplus -lgdi32 -luser32 -lkernel32 -lcomctl32 -l:lib/libunicows.a
 RES	= windres
 
