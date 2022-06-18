@@ -3,7 +3,7 @@
 #
 CC	 = g++
 CFLAGS = -Wall -std=c++11 -DUNICODE=1
-LFLAGS = -l:lib/libunicows.a -lgdiplus -lgdi32 -luser32 -lkernel32 -lcomctl32
+LFLAGS = -lgdiplus -lgdi32 -luser32 -lkernel32 -lcomctl32 -l:lib/libunicows.a
 RES	= windres
 
 #
@@ -15,6 +15,7 @@ OBJS = $(OBJS_1:.rc=.res)
 EXE  = cppshot.exe
 OBJDIR = obj
 BINDIR = bin
+SRCDIR = src
 
 #
 # Debug build settings
@@ -45,10 +46,10 @@ debug: $(DBGEXE)
 $(DBGEXE): $(DBGOBJS)
 	$(CC) $(DBGCFLAGS) -o $(DBGEXE) $^ $(LFLAGS) 
 
-$(OBJDIR)/$(DBGDIR)/%.o: %.cpp
+$(OBJDIR)/$(DBGDIR)/%.o: $(SRCDIR)/%.cpp
 	$(CC) -c $(CFLAGS) $(DBGCFLAGS) -o $@ $<
 
-$(OBJDIR)/$(DBGDIR)/%.res: %.rc
+$(OBJDIR)/$(DBGDIR)/%.res: $(SRCDIR)/%.rc
 	$(RES) -J rc -O coff -i $< -o $@
 
 #
@@ -59,10 +60,10 @@ release: $(RELEXE)
 $(RELEXE): $(RELOBJS)
 	$(CC) $(RELCFLAGS) -o $(RELEXE) $^ $(LFLAGS) 
 
-$(OBJDIR)/$(RELDIR)/%.o: %.cpp
+$(OBJDIR)/$(RELDIR)/%.o: $(SRCDIR)/%.cpp
 	$(CC) -c $(CFLAGS) $(RELCFLAGS) -o $@ $<
 
-$(OBJDIR)/$(RELDIR)/%.res: %.rc
+$(OBJDIR)/$(RELDIR)/%.res: $(SRCDIR)/%.rc
 	$(RES) -J rc -O coff -i $< -o $@
 
 #
