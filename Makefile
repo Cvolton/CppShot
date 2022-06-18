@@ -9,7 +9,7 @@ RES	= windres
 #
 # Project files
 #
-SRCS = main.cpp resources.rc
+SRCS = main.cpp resources.rc Screenshot.cpp CompositeScreenshot.cpp
 OBJS_1 = $(SRCS:.cpp=.o)
 OBJS = $(OBJS_1:.rc=.res)
 EXE  = cppshot.exe

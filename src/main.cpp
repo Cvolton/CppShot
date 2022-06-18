@@ -9,25 +9,17 @@
 
 #include <windows.h>
 #include <commctrl.h>
-//#include <wchar.h>
 #include <tchar.h>
-//#include <winuser.h>
-//#include <stdio.h>
-//#include <wingdi.h>
 #include <gdiplus.h>
-//#include <stdlib.h>
 #include <sstream>
-//#include <string>
 #include <iostream>
-//#include <vector>
-//#include <locale>
-//#include <codecvt>
 #include <chrono>
 #include <string>
-//#include <cstring>
 #include <sys/stat.h>
 
 #include "resources.h"
+#include "Screenshot.h"
+#include "CompositeScreenshot.h"
 
 #define CPPSHOT_VERSION L"0.5 - build: " __DATE__ " " __TIME__
 
@@ -53,10 +45,6 @@ inline bool FileExists (const std::wstring& name) {
 
 inline unsigned __int64 CurrentTimestamp() {
     return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-}
-
-inline BYTE ToByte(int value){
-    return value > 255 ? 255 : value;
 }
 
 std::wstring GetRegistry(LPCTSTR pszValueName, LPCTSTR defaultValue)
@@ -94,37 +82,6 @@ std::wstring GetRegistry(LPCTSTR pszValueName, LPCTSTR defaultValue)
 
 std::wstring GetSaveDirectory(){
     return GetRegistry(L"Path", DEFAULT_SAVE_DIRECTORY);
-}
-
-int GetEncoderClsid(const WCHAR* format, CLSID* pClsid)
-{
-    UINT  num = 0;          // number of image encoders
-    UINT  size = 0;         // size of the image encoder array in bytes
-
-    Gdiplus::ImageCodecInfo* pImageCodecInfo = NULL;
-
-    Gdiplus::GetImageEncodersSize(&num, &size);
-    if (size == 0)
-        return -1;  // Failure
-
-    pImageCodecInfo = (Gdiplus::ImageCodecInfo*)(malloc(size));
-    if (pImageCodecInfo == NULL)
-        return -1;  // Failure
-
-    GetImageEncoders(num, size, pImageCodecInfo);
-
-    for (UINT j = 0; j < num; ++j)
-    {
-        if (wcscmp(pImageCodecInfo[j].MimeType, format) == 0)
-        {
-            *pClsid = pImageCodecInfo[j].Clsid;
-            free(pImageCodecInfo);
-            return j;  // Success
-        }
-    }
-
-    free(pImageCodecInfo);
-    return -1;  // Failure
 }
 
 const wchar_t* statusString(const Gdiplus::Status status) {
@@ -205,44 +162,9 @@ HWND createBackdropWindow(HINSTANCE hThisInstance, TCHAR className, HBRUSH backg
     return hwnd;
 }
 
-void DifferentiateAlpha(Gdiplus::Bitmap* whiteShot, Gdiplus::Bitmap* blackShot, Gdiplus::Bitmap* transparentBitmap){
-
-    Gdiplus::BitmapData transparentBitmapData;
-    Gdiplus::Rect rect1(0, 0, transparentBitmap->GetWidth(), transparentBitmap->GetHeight());
-    transparentBitmap->LockBits(&rect1, Gdiplus::ImageLockModeWrite, PixelFormat32bppARGB, &transparentBitmapData);
-    BYTE* transparentPixels = (BYTE*) (void*) transparentBitmapData.Scan0;
-
-    Gdiplus::BitmapData whiteBitmapData;
-    whiteShot->LockBits(&rect1, Gdiplus::ImageLockModeRead, PixelFormat32bppARGB, &whiteBitmapData);
-    BYTE* whitePixels = (BYTE*) (void*) whiteBitmapData.Scan0;
-
-    Gdiplus::BitmapData blackBitmapData;
-    blackShot->LockBits(&rect1, Gdiplus::ImageLockModeRead, PixelFormat32bppARGB, &blackBitmapData);
-    BYTE* blackPixels = (BYTE*) (void*) blackBitmapData.Scan0;
-
-    for(unsigned int x = 0; x < whiteShot->GetWidth(); x++){
-        for(unsigned int y = 0; y < whiteShot->GetHeight(); y++){
-            unsigned int currentPixel = (y*(whiteShot->GetWidth()) + x)*4;
-            //Setting alpha
-            transparentPixels[currentPixel+3] = ToByte((blackPixels[currentPixel+2] - whitePixels[currentPixel+2] + 255 + blackPixels[currentPixel+1] - whitePixels[currentPixel+1] + 255 + blackPixels[currentPixel] - whitePixels[currentPixel] + 255) / 3);
-            //Setting fully transparent pixels to 0
-            transparentPixels[currentPixel+2] = 0;
-            transparentPixels[currentPixel+1] = 0;
-            transparentPixels[currentPixel] = 0;
-            if(transparentPixels[currentPixel+3] > 0){
-                transparentPixels[currentPixel+2] = ToByte(255 * blackPixels[currentPixel+2] / transparentPixels[currentPixel+3]); //RED
-                transparentPixels[currentPixel+1] = ToByte(255 * blackPixels[currentPixel+1] / transparentPixels[currentPixel+3]); //GREEN
-                transparentPixels[currentPixel] = ToByte(255 * blackPixels[currentPixel] / transparentPixels[currentPixel+3]); //BLUE
-            }
-        }
-    }
-
-    transparentBitmap->UnlockBits(&transparentBitmapData);
-    whiteShot->UnlockBits(&whiteBitmapData);
-    blackShot->UnlockBits(&blackBitmapData);
-}
-
 HBITMAP CaptureScreenArea(RECT rct){
+    //TODO: migrate this away
+
     HDC hdc = GetDC(HWND_DESKTOP);
     HDC memdc = CreateCompatibleDC(hdc);
     HBITMAP hbitmap = CreateCompatibleBitmap(hdc, rct.right - rct.left, rct.bottom - rct.top);
@@ -311,103 +233,29 @@ void RemoveIllegalChars(std::wstring* str){
     }
 }
 
-Gdiplus::Rect CalculateCrop(Gdiplus::Bitmap* transparentBitmap){
-    int imageWidth = transparentBitmap->GetWidth();
-    int imageHeight = transparentBitmap->GetHeight();
-
-    int leftcrop = imageWidth;
-    int rightcrop = -1;
-    int topcrop = imageHeight;
-    int bottomcrop = -1;
-
-    Gdiplus::Rect rect1(0, 0, imageWidth, imageHeight);
-
-    Gdiplus::BitmapData transparentBitmapData;
-    transparentBitmap->LockBits(&rect1, Gdiplus::ImageLockModeRead, PixelFormat32bppARGB, &transparentBitmapData);
-    BYTE* transparentPixels = (BYTE*) (void*) transparentBitmapData.Scan0;
-
-    for(int x = 0; x < imageWidth; x++){
-        for(int y = 0; y < imageHeight; y++){
-            int currentPixel = (y*imageWidth + x)*4;
-            if(transparentPixels[currentPixel+3] > 0){
-                leftcrop = (leftcrop > x) ? x : leftcrop;
-                topcrop = (topcrop > y) ? y : topcrop;
-                rightcrop = (x > rightcrop) ? x : rightcrop;
-                bottomcrop = (y > bottomcrop) ? y : bottomcrop;
-            }
-        }
-    }
-
-    //"temporary" workaround until I have time to analyze why the actual algo cuts the image one pixel short
-    rightcrop++;
-    bottomcrop++;
-
-    transparentBitmap->UnlockBits(&transparentBitmapData);
-
-    if(leftcrop >= rightcrop || topcrop >= bottomcrop){
-        return Gdiplus::Rect(0, 0, 0, 0);
-    }
-
-    bottomcrop -= topcrop;
-    rightcrop -= leftcrop;
-
-    printf("%i ; %i ; %i ; %i", leftcrop, topcrop, rightcrop, bottomcrop);
-    return Gdiplus::Rect(leftcrop, topcrop, rightcrop, bottomcrop);
-}
-
-void CloneImage(Gdiplus::Bitmap* oldBitmap, Gdiplus::Bitmap* newBitmap){
-    //TODO: see if there's an equivalent of C#'s DrawImage
-    Gdiplus::Rect oldRect(0, 0, oldBitmap->GetWidth(), oldBitmap->GetHeight());
-    Gdiplus::Rect newRect(0, 0, newBitmap->GetWidth(), newBitmap->GetHeight());
-
-    Gdiplus::BitmapData newBitmapData;
-    newBitmap->LockBits(&newRect, Gdiplus::ImageLockModeWrite, PixelFormat32bppARGB, &newBitmapData);
-    BYTE* newPixels = (BYTE*) (void*) newBitmapData.Scan0;
-
-    Gdiplus::BitmapData oldBitmapData;
-    oldBitmap->LockBits(&oldRect, Gdiplus::ImageLockModeRead, PixelFormat32bppARGB, &oldBitmapData);
-    BYTE* oldPixels = (BYTE*) (void*) oldBitmapData.Scan0;
-
-    for(unsigned int x = 0; x < oldBitmap->GetWidth(); x++){
-        for(unsigned int y = 0; y < oldBitmap->GetHeight(); y++){
-            unsigned int oldPixel = (y*(oldBitmap->GetWidth()) + x)*4;
-            unsigned int newPixel = (y*(newBitmap->GetWidth()) + x)*4;
-
-            for(unsigned int z = 0; z < 4; z++)
-                newPixels[newPixel + z] = oldPixels[oldPixel + z];
-        }
-    }
-
-    newBitmap->UnlockBits(&newBitmapData);
-    oldBitmap->UnlockBits(&oldBitmapData);
-
-    //delete bitmap;
-    //&bitmap = &bmp;
-}
-
 void CaptureCompositeScreenshot(HINSTANCE hThisInstance, HWND whiteHwnd, HWND blackHwnd, bool creMode){
 
     std::cout << "Screenshot capture start: " << CurrentTimestamp() << std::endl;
 
     HWND desktopWindow = GetDesktopWindow();
-    HWND foregoundWindow = GetForegroundWindow();
+    HWND foregroundWindow = GetForegroundWindow();
     HWND taskbar = FindWindow(L"Shell_TrayWnd", NULL);
     HWND startButton = FindWindow(L"Button", L"Start");
 
     //hiding the taskbar in case it gets in the way
     //note that this may cause issues if the program crashes during capture
-    if(foregoundWindow != taskbar && foregoundWindow != startButton){
+    if(foregroundWindow != taskbar && foregroundWindow != startButton){
         ShowWindow(taskbar, 0);
         ShowWindow(startButton, 0);
     }
 
-    SetForegroundWindow(foregoundWindow);
+    SetForegroundWindow(foregroundWindow);
 
     //calculating screenshot area
     RECT rct;
     RECT rctDesktop;
 
-    GetWindowRect(foregoundWindow, &rct);
+    GetWindowRect(foregroundWindow, &rct);
     GetWindowRect(desktopWindow, &rctDesktop);
 
     std::cout << rct.left << ";" << rct.right << ";" << rct.top << ";" << rct.bottom << std::endl;
@@ -419,9 +267,9 @@ void CaptureCompositeScreenshot(HINSTANCE hThisInstance, HWND whiteHwnd, HWND bl
     rct.top = (rctDesktop.top < (rct.top-100)) ? (rct.top - 100) : rctDesktop.top;
 
     //spawning backdrop
-    if(!SetWindowPos(blackHwnd, foregoundWindow, rct.left, rct.top, rct.right - rct.left, rct.bottom - rct.top, SWP_NOACTIVATE)){
+    if(!SetWindowPos(blackHwnd, foregroundWindow, rct.left, rct.top, rct.right - rct.left, rct.bottom - rct.top, SWP_NOACTIVATE)){
         SetWindowPos(blackHwnd, NULL, rct.left, rct.top, rct.right - rct.left, rct.bottom - rct.top, SWP_NOACTIVATE);
-        SetForegroundWindow(foregoundWindow);
+        SetForegroundWindow(foregroundWindow);
     }
     SetWindowPos(whiteHwnd, blackHwnd, rct.left, rct.top, rct.right - rct.left, rct.bottom - rct.top, SWP_NOACTIVATE);
 
@@ -437,46 +285,32 @@ void CaptureCompositeScreenshot(HINSTANCE hThisInstance, HWND whiteHwnd, HWND bl
 
     std::cout << "Capturing black: " << CurrentTimestamp() << std::endl;
 
-    Gdiplus::Bitmap blackShot(CaptureScreenArea(rct), NULL);
+    Screenshot blackShot(foregroundWindow);
 
     ShowWindow (blackHwnd, 0);
     ShowWindow (whiteHwnd, SW_SHOWNOACTIVATE);
 
     WaitForColor(rct, RGB(255,255,255));
 
-    /*while(true){
-        unsigned __int64 whiteTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-        std::cout << whiteTime << std::endl;
-        if((whiteTime-blackTime) % 2000 == 0)
-            break;
-    }*/
-    //Sleep(2000);
-
     std::cout << "Capturing white: " << CurrentTimestamp() << std::endl;
-    Gdiplus::Bitmap whiteShot(CaptureScreenArea(rct), NULL);
+    Screenshot whiteShot(foregroundWindow);
 
-    #if(SAVE_INTERMEDIARY_IMAGES)
-        CLSID pngEncoderTemp = {0x557cf406, 0x1a04, 0x11d3, {0x9a, 0x73, 0x00, 0x00, 0xf8, 0x1e, 0xf3, 0x2e} } ;
-        GetEncoderClsid(L"image/png", &pngEncoderTemp);
-        whiteShot.Save(L"c:\\test\\0_whiteShot.png", &pngEncoderTemp, NULL);
-        blackShot.Save(L"c:\\test\\0_blackShot.png", &pngEncoderTemp, NULL);
-    #endif
-
-    //inactive capture
-    if(creMode){
-        SetForegroundWindow(desktopWindow);
+    /*if(creMode){
         Sleep(33); //Time for the foreground window to settle
+        SetForegroundWindow(desktopWindow);
+        Screenshot whiteCreShot(foregroundWindow);
         WaitForColor(rct, RGB(255,255,255));
     }
     std::cout << "Capturing black inactive: " << CurrentTimestamp() << std::endl;
-    Gdiplus::Bitmap whiteInactiveShot(CaptureScreenArea(rct), NULL);
     if(creMode){
+        Screenshot blackCreShow(foregroundWindow);
+
         ShowWindow (blackHwnd, SW_SHOWNOACTIVATE);
         ShowWindow (whiteHwnd, 0);
         WaitForColor(rct, RGB(0,0,0));
     }
     std::cout << "Capturing white inactive: " << CurrentTimestamp() << std::endl;
-    Gdiplus::Bitmap blackInactiveShot(CaptureScreenArea(rct), NULL);
+    Gdiplus::Bitmap blackInactiveShot(CaptureScreenArea(rct), NULL);*/
 
     //activating taskbar
     ShowWindow(taskbar, 1);
@@ -488,17 +322,12 @@ void CaptureCompositeScreenshot(HINSTANCE hThisInstance, HWND whiteHwnd, HWND bl
 
     //differentiating alpha
     std::cout << "Differentiating alpha: " << CurrentTimestamp() << std::endl;
-    Gdiplus::Bitmap transparentBitmap(whiteShot.GetWidth(), whiteShot.GetHeight(), PixelFormat32bppARGB);
-    DifferentiateAlpha(&whiteShot, &blackShot, &transparentBitmap);
-
-    Gdiplus::Bitmap transparentInactiveBitmap(whiteShot.GetWidth(), whiteShot.GetHeight(), PixelFormat32bppARGB);
-
-    if(creMode)
-        DifferentiateAlpha(&whiteInactiveShot, &blackInactiveShot, &transparentInactiveBitmap);
+    CompositeScreenshot transparentImage(whiteShot, blackShot);
+    /*if(creMode)
+        DifferentiateAlpha(&whiteInactiveShot, &blackInactiveShot, &transparentInactiveBitmap);*/
 
     //calculating crop
-    std::cout << "Capturing crop: " << CurrentTimestamp() << std::endl;
-    Gdiplus::Rect rect1(0, 0, (rct.right - rct.left), (rct.bottom - rct.top));
+    /*std::cout << "Capturing crop: " << CurrentTimestamp() << std::endl;
     Gdiplus::Rect crop = CalculateCrop(&transparentBitmap);
     if(crop.GetLeft() == crop.GetRight() || crop.GetTop() == crop.GetBottom()){
         ShowWindow (whiteHwnd, 0);
@@ -508,35 +337,13 @@ void CaptureCompositeScreenshot(HINSTANCE hThisInstance, HWND whiteHwnd, HWND bl
     }
 
     std::cout << "Creating bitmaps: " << CurrentTimestamp() << std::endl;
-    Gdiplus::Bitmap* croppedBitmap = transparentBitmap.Clone(crop, PixelFormatDontCare);
-    Gdiplus::Bitmap* croppedInactive = transparentInactiveBitmap.Clone(crop, PixelFormatDontCare);
-
-    int imageWidth = croppedBitmap->GetWidth();
-    int imageHeight = croppedBitmap->GetHeight();
-    if(creMode){
-        if((imageWidth % 2 == 1))
-            imageWidth++;
-
-        if((imageHeight % 2 == 1))
-            imageHeight++;
-    }
-
-    Gdiplus::Bitmap* clonedBitmap = new Gdiplus::Bitmap(imageWidth, imageHeight, PixelFormat32bppARGB);
-    Gdiplus::Bitmap* clonedInactive = new Gdiplus::Bitmap(imageWidth, imageHeight, PixelFormat32bppARGB);
-    CloneImage(croppedBitmap, clonedBitmap);
-    CloneImage(croppedInactive, clonedInactive);
-
-    //Saving memory
-    delete croppedBitmap;
-    delete croppedInactive;
+    CompositeScreenshot transparentImage();*/
 
     //Saving the image
     std::cout << "Saving: " << CurrentTimestamp() << std::endl;
-    CLSID pngEncoder = {0x557cf406, 0x1a04, 0x11d3, {0x9a, 0x73, 0x00, 0x00, 0xf8, 0x1e, 0xf3, 0x2e} } ;
-    GetEncoderClsid(L"image/png", &pngEncoder);
 
     TCHAR h[2048];
-    GetWindowText(foregoundWindow, h, 2048);
+    GetWindowText(foregroundWindow, h, 2048);
     std::wstring windowTextStr(h);
 
     RemoveIllegalChars(&windowTextStr);
@@ -567,11 +374,13 @@ void CaptureCompositeScreenshot(HINSTANCE hThisInstance, HWND whiteHwnd, HWND bl
         i++;
     }
 
+    transparentImage.save(pathbuild.str());
+
     /*std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
     std::wstring fileNameUtf16 = converter.from_bytes(fileName);
     std::wstring fileNameInactiveUtf16 = converter.from_bytes(fileNameInactive);*/
 
-    std::wcout << fileName << std::endl << fileNameInactive << std::endl;
+    /*std::wcout << fileName << std::endl << fileNameInactive << std::endl;
     DisplayGdiplusStatusError(clonedBitmap->Save(fileName.c_str(), &pngEncoder, NULL));
     if(creMode)
         DisplayGdiplusStatusError(clonedInactive->Save(fileNameInactive.c_str(), &pngEncoder, NULL));
@@ -579,7 +388,7 @@ void CaptureCompositeScreenshot(HINSTANCE hThisInstance, HWND whiteHwnd, HWND bl
     std::cout << "Done: " << CurrentTimestamp() << std::endl;
     //Cleaning memory
     delete clonedBitmap;
-    delete clonedInactive;
+    delete clonedInactive;*/
 }
 
 int WINAPI WinMain (HINSTANCE hThisInstance,
