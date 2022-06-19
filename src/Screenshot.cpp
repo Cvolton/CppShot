@@ -13,7 +13,7 @@ Screenshot::~Screenshot() {
 void Screenshot::capture(HWND window) {
 	delete m_image;
 
-	m_window = window;
+    m_window = window;
 	RECT rct = createRect();
 
 	HDC hdc = GetDC(HWND_DESKTOP);
@@ -27,7 +27,7 @@ void Screenshot::capture(HWND window) {
     ReleaseDC(HWND_DESKTOP, hdc);
 
 	m_image = new Gdiplus::Bitmap(hbitmap, NULL);
-	delete hbitmap;
+	//delete hbitmap;
 }
 
 RECT Screenshot::createRect() {

@@ -9,7 +9,7 @@ RES	= windres
 #
 # Project files
 #
-SRCS = main.cpp resources.rc Screenshot.cpp CompositeScreenshot.cpp
+SRCS = main.cpp resources.rc Screenshot.cpp CompositeScreenshot.cpp BackdropWindow.cpp
 OBJS_1 = $(SRCS:.cpp=.o)
 OBJS = $(OBJS_1:.rc=.res)
 EXE  = cppshot.exe

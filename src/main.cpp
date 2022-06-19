@@ -20,6 +20,7 @@
 #include "resources.h"
 #include "Screenshot.h"
 #include "CompositeScreenshot.h"
+#include "BackdropWindow.h"
 
 #define CPPSHOT_VERSION L"0.5 - build: " __DATE__ " " __TIME__
 
@@ -118,110 +119,6 @@ void DisplayGdiplusStatusError(const Gdiplus::Status status){
     MessageBox(NULL, errorText, ERROR_TITLE, 0x40010);
 }
 
-HWND createBackdropWindow(HINSTANCE hThisInstance, TCHAR className, HBRUSH backgroundBrush){
-    HWND hwnd;               /* This is the handle for our window */
-    WNDCLASSEX wincl;        /* Data structure for the windowclass */
-    wincl.hInstance = hThisInstance;
-    wincl.lpszClassName = &className;
-    wincl.lpfnWndProc = WindowProcedure;      /* This function is called by windows */
-    wincl.style = CS_DBLCLKS;                 /* Catch double-clicks */
-    wincl.cbSize = sizeof (WNDCLASSEX);
-
-    /* Use default icon and mouse-pointer */
-    wincl.hIcon = LoadIcon (NULL, IDI_APPLICATION);
-    wincl.hIconSm = LoadIcon (NULL, IDI_APPLICATION);
-    wincl.hCursor = LoadCursor (NULL, IDC_ARROW);
-    wincl.lpszMenuName = NULL;                 /* No menu */
-    wincl.cbClsExtra = 0;                      /* No extra bytes after the window class */
-    wincl.cbWndExtra = 0;                      /* structure or the window instance */
-    /* Use Windows's default colour as the background of the window */
-    wincl.hbrBackground = backgroundBrush;
-
-    if (!RegisterClassEx (&wincl)){
-        MessageBox(NULL, L"Unable to create backdrop window, the program may not work correctly.", ERROR_TITLE, 0x30);
-        return NULL;
-    }
-
-    hwnd = CreateWindowEx (
-           WS_EX_TOOLWINDOW,                   /* Extended possibilites for variation */
-            &className,         /* Classname */
-           _T("Backdrop Window"),       /* Title Text */
-           WS_POPUP , /* default window */
-           CW_USEDEFAULT,       /* Windows decides the position */
-           CW_USEDEFAULT,       /* where the window ends up on the screen */
-           544,                 /* The programs width */
-           375,                 /* and height in pixels */
-           HWND_DESKTOP,        /* The window is a child-window to desktop */
-           NULL,                /* No menu */
-           hThisInstance,       /* Program Instance handler */
-           NULL                 /* No Window Creation data */
-           );
-
-    //SetWindowLong(hwnd, GWL_STYLE, WS_POPUP);
-
-    return hwnd;
-}
-
-HBITMAP CaptureScreenArea(RECT rct){
-    //TODO: migrate this away
-
-    HDC hdc = GetDC(HWND_DESKTOP);
-    HDC memdc = CreateCompatibleDC(hdc);
-    HBITMAP hbitmap = CreateCompatibleBitmap(hdc, rct.right - rct.left, rct.bottom - rct.top);
-
-    SelectObject(memdc, hbitmap);
-    BitBlt(memdc, 0, 0, rct.right - rct.left, rct.bottom - rct.top, hdc, rct.left, rct.top, SRCCOPY );
-
-    DeleteDC(memdc);
-    ReleaseDC(HWND_DESKTOP, hdc);
-
-    return hbitmap;
-}
-
-void WaitForColor(RECT rct, unsigned long color){
-    for(int x = 0; x < 66; x++){ //capping out at 330 ms, which is already fairly slow
-
-        RECT rctOnePx;
-        rctOnePx.left = rct.left;
-        rctOnePx.top = rct.top;
-        rctOnePx.right = rct.left + 1;
-        rctOnePx.bottom = rct.top + 1;
-        HBITMAP pixelBmp = CaptureScreenArea(rctOnePx);
-
-        //code adapted from https://stackoverflow.com/questions/26233848/c-read-pixels-with-getdibits
-        HDC hdc = GetDC(0);
-
-        BITMAPINFO MyBMInfo = {0};
-        MyBMInfo.bmiHeader.biSize = sizeof(MyBMInfo.bmiHeader);
-
-        // Get the BITMAPINFO structure from the bitmap
-        if(0 == GetDIBits(hdc, pixelBmp, 0, 0, NULL, &MyBMInfo, DIB_RGB_COLORS)) {
-            std::cout << "error" << std::endl;
-        }
-
-        // create the bitmap buffer
-        BYTE* lpPixels = new BYTE[MyBMInfo.bmiHeader.biSizeImage];
-
-        // Better do this here - the original bitmap might have BI_BITFILEDS, which makes it
-        // necessary to read the color table - you might not want this.
-        MyBMInfo.bmiHeader.biCompression = BI_RGB;
-
-        // get the actual bitmap buffer
-        if(0 == GetDIBits(hdc, pixelBmp, 0, MyBMInfo.bmiHeader.biHeight, (LPVOID)lpPixels, &MyBMInfo, DIB_RGB_COLORS)) {
-            std::cout << "error2" << std::endl;
-        }
-
-        //end of stackoverflow code
-        unsigned long currentColor = (((unsigned long)lpPixels[0]) << 16) | (((unsigned long)lpPixels[1]) << 8) | (((unsigned long)lpPixels[2]));
-
-        std::cout << currentColor << std::endl;
-        if(color == currentColor)
-            break;
-
-        Sleep(5);
-    }
-}
-
 void RemoveIllegalChars(std::wstring* str){
     std::wstring::iterator it;
     std::wstring illegalChars = L"\\/:?\"<>|*";
@@ -233,11 +130,10 @@ void RemoveIllegalChars(std::wstring* str){
     }
 }
 
-void CaptureCompositeScreenshot(HINSTANCE hThisInstance, HWND whiteHwnd, HWND blackHwnd, bool creMode){
+void CaptureCompositeScreenshot(HINSTANCE hThisInstance, BackdropWindow& whiteWindow, BackdropWindow& blackWindow, bool creMode){
 
     std::cout << "Screenshot capture start: " << CurrentTimestamp() << std::endl;
 
-    HWND desktopWindow = GetDesktopWindow();
     HWND foregroundWindow = GetForegroundWindow();
     HWND taskbar = FindWindow(L"Shell_TrayWnd", NULL);
     HWND startButton = FindWindow(L"Button", L"Start");
@@ -249,51 +145,38 @@ void CaptureCompositeScreenshot(HINSTANCE hThisInstance, HWND whiteHwnd, HWND bl
         ShowWindow(startButton, 0);
     }
 
-    SetForegroundWindow(foregroundWindow);
-
-    //calculating screenshot area
-    RECT rct;
-    RECT rctDesktop;
-
-    GetWindowRect(foregroundWindow, &rct);
-    GetWindowRect(desktopWindow, &rctDesktop);
-
-    std::cout << rct.left << ";" << rct.right << ";" << rct.top << ";" << rct.bottom << std::endl;
-    std::cout << rctDesktop.left << ";" << rctDesktop.right << ";" << rctDesktop.top << ";" << rctDesktop.bottom << std::endl;
-
-    rct.left = (rctDesktop.left < (rct.left-100)) ? (rct.left - 100) : rctDesktop.left;
-    rct.right = (rctDesktop.right > (rct.right+100)) ? (rct.right + 100) : rctDesktop.right;
-    rct.bottom = (rctDesktop.bottom > (rct.bottom+100)) ? (rct.bottom + 100) : rctDesktop.bottom;
-    rct.top = (rctDesktop.top < (rct.top-100)) ? (rct.top - 100) : rctDesktop.top;
+    whiteWindow.resize(foregroundWindow);
+    blackWindow.resize(foregroundWindow);
 
     //spawning backdrop
-    if(!SetWindowPos(blackHwnd, foregroundWindow, rct.left, rct.top, rct.right - rct.left, rct.bottom - rct.top, SWP_NOACTIVATE)){
-        SetWindowPos(blackHwnd, NULL, rct.left, rct.top, rct.right - rct.left, rct.bottom - rct.top, SWP_NOACTIVATE);
-        SetForegroundWindow(foregroundWindow);
-    }
-    SetWindowPos(whiteHwnd, blackHwnd, rct.left, rct.top, rct.right - rct.left, rct.bottom - rct.top, SWP_NOACTIVATE);
+    SetForegroundWindow(foregroundWindow);
 
     std::cout << "Additional white flash: " << CurrentTimestamp() << std::endl;
-    ShowWindow (whiteHwnd, SW_SHOWNOACTIVATE);
-    WaitForColor(rct, RGB(255,255,255));
-
-    ShowWindow (blackHwnd, SW_SHOWNOACTIVATE);
-    ShowWindow (whiteHwnd, 0);
+    
+    //WaitForColor(rct, RGB(255,255,255));
+    whiteWindow.show();
+    blackWindow.hide();
 
     //taking the screenshot
-    WaitForColor(rct, RGB(0,0,0));
+    //WaitForColor(rct, RGB(0,0,0));
 
     std::cout << "Capturing black: " << CurrentTimestamp() << std::endl;
 
+
+    blackWindow.show();
+    whiteWindow.hide();
+    
     Screenshot blackShot(foregroundWindow);
+    blackShot.save(L"c:\\test\\0_black.png");
 
-    ShowWindow (blackHwnd, 0);
-    ShowWindow (whiteHwnd, SW_SHOWNOACTIVATE);
-
-    WaitForColor(rct, RGB(255,255,255));
+    //WaitForColor(rct, RGB(255,255,255));
 
     std::cout << "Capturing white: " << CurrentTimestamp() << std::endl;
+    whiteWindow.show();
+    blackWindow.hide();
+    
     Screenshot whiteShot(foregroundWindow);
+    whiteShot.save(L"c:\\test\\0_white.png");
 
     /*if(creMode){
         Sleep(33); //Time for the foreground window to settle
@@ -317,27 +200,12 @@ void CaptureCompositeScreenshot(HINSTANCE hThisInstance, HWND whiteHwnd, HWND bl
     ShowWindow(startButton, 1);
 
     //hiding backdrop
-    ShowWindow (blackHwnd, 0);
-    ShowWindow (whiteHwnd, 0);
+    blackWindow.hide();
+    whiteWindow.hide();
 
     //differentiating alpha
     std::cout << "Differentiating alpha: " << CurrentTimestamp() << std::endl;
     CompositeScreenshot transparentImage(whiteShot, blackShot);
-    /*if(creMode)
-        DifferentiateAlpha(&whiteInactiveShot, &blackInactiveShot, &transparentInactiveBitmap);*/
-
-    //calculating crop
-    /*std::cout << "Capturing crop: " << CurrentTimestamp() << std::endl;
-    Gdiplus::Rect crop = CalculateCrop(&transparentBitmap);
-    if(crop.GetLeft() == crop.GetRight() || crop.GetTop() == crop.GetBottom()){
-        ShowWindow (whiteHwnd, 0);
-        ShowWindow (blackHwnd, 0);
-        MessageBox(whiteHwnd, L"Screenshot is empty, aborting capture.", L"Error", MB_OK | MB_ICONSTOP);
-        return;
-    }
-
-    std::cout << "Creating bitmaps: " << CurrentTimestamp() << std::endl;
-    CompositeScreenshot transparentImage();*/
 
     //Saving the image
     std::cout << "Saving: " << CurrentTimestamp() << std::endl;
@@ -497,8 +365,10 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
     ShowWindow (hwnd, nCmdShow);
 
     /* Create backdrop windows */
-    HWND whiteHwnd = createBackdropWindow(hThisInstance, *whiteBackdropClassName, (HBRUSH) CreateSolidBrush(RGB(255,255,255)));
-    HWND blackHwnd = createBackdropWindow(hThisInstance, *blackBackdropClassName, (HBRUSH) CreateSolidBrush(RGB(0,0,0)));
+    /*HWND whiteHwnd = createBackdropWindow(hThisInstance, *whiteBackdropClassName, (HBRUSH) CreateSolidBrush(RGB(255,255,255)));
+    HWND blackHwnd = createBackdropWindow(hThisInstance, *blackBackdropClassName, (HBRUSH) CreateSolidBrush(RGB(0,0,0)));*/
+    BackdropWindow whiteWindow(hThisInstance, RGB(255, 255, 255), whiteBackdropClassName);
+    BackdropWindow blackWindow(hThisInstance, RGB(0, 0, 0), blackBackdropClassName);
 
     /* Start GDI+ */
     Gdiplus::GdiplusStartupInput gpStartupInput;
@@ -512,9 +382,9 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
         {
             _tprintf(_T("WM_HOTKEY received\n"));
             if (messages.wParam == 1)
-                CaptureCompositeScreenshot(hThisInstance, whiteHwnd, blackHwnd, false);
+                CaptureCompositeScreenshot(hThisInstance, whiteWindow, blackWindow, false);
             else if (messages.wParam == 2)
-                CaptureCompositeScreenshot(hThisInstance, whiteHwnd, blackHwnd, true);
+                CaptureCompositeScreenshot(hThisInstance, whiteWindow, blackWindow, true);
         }
 
         /* Translate virtual-key messages into character messages */
