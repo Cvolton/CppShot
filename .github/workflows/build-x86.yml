@@ -35,11 +35,12 @@ jobs:
     - name: Move build to release folder
       run: |
         mkdir release
-        mv build/CppShot.exe release/CppShot.exe
+        mv build/CppShot.exe release/cppshot.exe
 
     - name: Grab Windows 98/2000 compatibility DLL
       run: |
         curl https://github.com/Cvolton/CppShot/releases/download/v0.4/gdiplus.dll -o release/gdiplus.dll -L
+        curl https://geometrydash.eu/_other/unicows.dll -o release/unicows.dll -L
 
     - name: Upload release build
       uses: actions/upload-artifact@v3
