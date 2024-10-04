@@ -32,8 +32,17 @@ jobs:
         cmake -DCMAKE_BUILD_TYPE:STRING=Release -DCMAKE_C_COMPILER=C:/TDM-GCC-5.1.0/bin/gcc.exe -DCMAKE_CXX_COMPILER=C:/TDM-GCC-5.1.0/bin/g++.exe -G Ninja -B build -S .
         cmake --build build --config Release
 
-    - name: Temporarily save client build
+    - name: Move build to release folder
+      run: |
+        mkdir release
+        mv build/CppShot.exe release/CppShot.exe
+
+    - name: Grab Windows 98 compatibility DLL
+      run: |
+        curl https://github.com/Cvolton/CppShot/releases/download/v0.4/gdiplus.dll -o release/gdiplus.dll
+
+    - name: Upload release build
       uses: actions/upload-artifact@v3
       with:
         name: cppshot-x86
-        path: ./build/CppShot.exe
+        path: ./release/
