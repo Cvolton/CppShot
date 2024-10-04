@@ -21,7 +21,17 @@ jobs:
       run: |
         curl https://sourceforge.net/projects/tdm-gcc/files/TDM-GCC%205%20series/5.1.0-tdm-1%20DW2/gcc-5.1.0-tdm-1-dw2-core.zip/download -o compiler.zip -L
         7z x compiler.zip -oC:/TDM-GCC-5.1.0
-        cmake -DCMAKE_C_COMPILER=C:/TDM-GCC-5.1.0/bin/gcc-dw2.exe -DCMAKE_CXX_COMPILER=C:/TDM-GCC-5.1.0/bin/g++-dw2.exe -B build -S .
+
+    - name: Install Ninja
+      run: |
+        scoop install ninja
+
+    - name: Configure
+      run: |
+        cmake -DCMAKE_C_COMPILER=C:/TDM-GCC-5.1.0/bin/gcc-dw2.exe -DCMAKE_CXX_COMPILER=C:/TDM-GCC-5.1.0/bin/g++-dw2.exe -G Ninja -B build -S .
+
+    - name: Build
+      run: |
         cmake --build build --config Release
 
     - name: Temporarily save client build
