@@ -37,9 +37,9 @@ jobs:
         mkdir release
         mv build/CppShot.exe release/CppShot.exe
 
-    - name: Grab Windows 98 compatibility DLL
+    - name: Grab Windows 98/2000 compatibility DLL
       run: |
-        curl https://github.com/Cvolton/CppShot/releases/download/v0.4/gdiplus.dll -o release/gdiplus.dll
+        curl https://github.com/Cvolton/CppShot/releases/download/v0.4/gdiplus.dll -o release/gdiplus.dll -L
 
     - name: Upload release build
       uses: actions/upload-artifact@v3
