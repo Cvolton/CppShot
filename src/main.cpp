@@ -119,10 +119,10 @@ void DisplayGdiplusStatusError(const Gdiplus::Status status){
     MessageBox(NULL, errorText, ERROR_TITLE, 0x40010);
 }
 
-void RemoveIllegalChars(std::wstring* str){
+void RemoveIllegalChars(std::wstring& str){
     std::wstring::iterator it;
     std::wstring illegalChars = L"\\/:?\"<>|*";
-    for (it = str->begin() ; it < str->end() ; ++it){
+    for (it = str.begin() ; it < str.end() ; ++it){
         bool found = illegalChars.find(*it) != std::string::npos;
         if(found){
             *it = ' ';
@@ -130,13 +130,42 @@ void RemoveIllegalChars(std::wstring* str){
     }
 }
 
-void CaptureCompositeScreenshot(HINSTANCE hThisInstance, BackdropWindow& whiteWindow, BackdropWindow& blackWindow, bool creMode){
+std::wstring GetSafeFilenameBase(std::wstring windowTitle) {
+    RemoveIllegalChars(windowTitle);
 
+    std::wstring path = GetSaveDirectory();
+    std::wcout << L"registrypath: " << path << std::endl;
+
+    CreateDirectory(path.c_str(), NULL);
+
+    std::wstringstream pathbuild;
+
+    std::wstring fileNameBase;
+
+    unsigned int i = 0;
+    do {
+        pathbuild.str(L"");
+
+        pathbuild << path << L"\\" << windowTitle << L"_" << i;
+
+        fileNameBase = pathbuild.str();
+
+        i++;
+    } while(FileExists(fileNameBase + L"_b1.png") | FileExists(fileNameBase + L"_b2.png"));
+
+    return fileNameBase;
+}
+
+void CaptureCompositeScreenshot(HINSTANCE hThisInstance, BackdropWindow& whiteWindow, BackdropWindow& blackWindow, bool creMode){
     std::cout << "Screenshot capture start: " << CurrentTimestamp() << std::endl;
 
+    HWND desktopWindow = GetDesktopWindow();
     HWND foregroundWindow = GetForegroundWindow();
     HWND taskbar = FindWindow(L"Shell_TrayWnd", NULL);
     HWND startButton = FindWindow(L"Button", L"Start");
+
+    std::pair<Screenshot, Screenshot> shots;
+    std::pair<Screenshot, Screenshot> creShots;
 
     //hiding the taskbar in case it gets in the way
     //note that this may cause issues if the program crashes during capture
@@ -154,8 +183,8 @@ void CaptureCompositeScreenshot(HINSTANCE hThisInstance, BackdropWindow& whiteWi
     std::cout << "Additional white flash: " << CurrentTimestamp() << std::endl;
     
     //WaitForColor(rct, RGB(255,255,255));
-    whiteWindow.show();
     blackWindow.hide();
+    whiteWindow.show();
 
     //taking the screenshot
     //WaitForColor(rct, RGB(0,0,0));
@@ -163,37 +192,30 @@ void CaptureCompositeScreenshot(HINSTANCE hThisInstance, BackdropWindow& whiteWi
     std::cout << "Capturing black: " << CurrentTimestamp() << std::endl;
 
 
-    blackWindow.show();
     whiteWindow.hide();
+    blackWindow.show();
     
-    Screenshot blackShot(foregroundWindow);
-    blackShot.save(L"c:\\test\\0_black.png");
+    shots.second.capture(foregroundWindow);
 
     //WaitForColor(rct, RGB(255,255,255));
 
     std::cout << "Capturing white: " << CurrentTimestamp() << std::endl;
-    whiteWindow.show();
     blackWindow.hide();
+    whiteWindow.show();
     
-    Screenshot whiteShot(foregroundWindow);
-    whiteShot.save(L"c:\\test\\0_white.png");
+    shots.first.capture(foregroundWindow);
 
-    /*if(creMode){
-        Sleep(33); //Time for the foreground window to settle
-        SetForegroundWindow(desktopWindow);
-        Screenshot whiteCreShot(foregroundWindow);
-        WaitForColor(rct, RGB(255,255,255));
-    }
-    std::cout << "Capturing black inactive: " << CurrentTimestamp() << std::endl;
     if(creMode){
-        Screenshot blackCreShow(foregroundWindow);
+        SetForegroundWindow(desktopWindow);
+        Sleep(33); //Time for the foreground window to settle
+        creShots.first.capture(foregroundWindow); //order swapped bc were starting with white now
+        
+        std::cout << "Capturing black inactive: " << CurrentTimestamp() << std::endl;
+        whiteWindow.hide();
+        blackWindow.show();
 
-        ShowWindow (blackHwnd, SW_SHOWNOACTIVATE);
-        ShowWindow (whiteHwnd, 0);
-        WaitForColor(rct, RGB(0,0,0));
+        creShots.second.capture(foregroundWindow);
     }
-    std::cout << "Capturing white inactive: " << CurrentTimestamp() << std::endl;
-    Gdiplus::Bitmap blackInactiveShot(CaptureScreenArea(rct), NULL);*/
 
     //activating taskbar
     ShowWindow(taskbar, 1);
@@ -203,9 +225,13 @@ void CaptureCompositeScreenshot(HINSTANCE hThisInstance, BackdropWindow& whiteWi
     blackWindow.hide();
     whiteWindow.hide();
 
+    if(!shots.first.isCaptured() || !shots.second.isCaptured()){
+        MessageBox(NULL, L"Screenshot is empty, aborting capture.", ERROR_TITLE, MB_OK | MB_ICONSTOP);
+        return;
+    }
+
     //differentiating alpha
-    std::cout << "Differentiating alpha: " << CurrentTimestamp() << std::endl;
-    CompositeScreenshot transparentImage(whiteShot, blackShot);
+    std::cout << "Starting image save: " << CurrentTimestamp() << std::endl;
 
     //Saving the image
     std::cout << "Saving: " << CurrentTimestamp() << std::endl;
@@ -213,36 +239,25 @@ void CaptureCompositeScreenshot(HINSTANCE hThisInstance, BackdropWindow& whiteWi
     TCHAR h[2048];
     GetWindowText(foregroundWindow, h, 2048);
     std::wstring windowTextStr(h);
-
-    RemoveIllegalChars(&windowTextStr);
-
-    std::wcout << windowTextStr << std::endl;
     //std::cout << std::endl << len;
 
-    std::wstring path = GetSaveDirectory();
-    std::wcout << L"registrypath: " << path << std::endl;
+    auto base = GetSafeFilenameBase(windowTextStr);
 
-    CreateDirectory(path.c_str(), NULL);
-    std::wstringstream pathbuild;
-    std::wstringstream pathbuildInactive;
-    pathbuild << path << L"\\" << windowTextStr << L"_b1.png";
-    pathbuildInactive << path << L"\\" << windowTextStr << L"_b2.png";
+    std::cout << "Differentiating alpha: " << CurrentTimestamp() << std::endl;
+    try {
+        CompositeScreenshot transparentImage(shots.first, shots.second);
+        transparentImage.save(base + L"_b1.png");
 
-    std::wstring fileName = pathbuild.str();
-    std::wstring fileNameInactive = pathbuildInactive.str();
-
-    unsigned int i = 0;
-    while(FileExists(fileName) | FileExists(fileNameInactive)){
-        pathbuild.str(L"");
-        pathbuildInactive.str(L"");
-        pathbuild << path << L"\\" << windowTextStr << L"_" << i << L"_b1.png";
-        pathbuildInactive << path << L"\\" << windowTextStr << L"_" << i << L"_b2.png";
-        fileName = pathbuild.str();
-        fileNameInactive = pathbuildInactive.str();
-        i++;
+        if(creShots.first.isCaptured() && creShots.second.isCaptured()){
+            CompositeScreenshot transparentInactiveImage(creShots.first, creShots.second, transparentImage.getCrop());
+            std::cout << "Inactive image ptr: " << transparentInactiveImage.getBitmap() << std::endl;
+            std::cout << transparentInactiveImage.getBitmap()->GetWidth() << "x" << transparentInactiveImage.getBitmap()->GetHeight() << std::endl;
+            transparentInactiveImage.save(base + L"_b2.png");
+        }
+    } catch(std::runtime_error& e) {
+        MessageBox(NULL, L"An error has occured while capturing the screenshot.", ERROR_TITLE, MB_OK | MB_ICONSTOP);
+        return;
     }
-
-    transparentImage.save(pathbuild.str());
 
     /*std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
     std::wstring fileNameUtf16 = converter.from_bytes(fileName);
@@ -257,6 +272,7 @@ void CaptureCompositeScreenshot(HINSTANCE hThisInstance, BackdropWindow& whiteWi
     //Cleaning memory
     delete clonedBitmap;
     delete clonedInactive;*/
+
 }
 
 int WINAPI WinMain (HINSTANCE hThisInstance,

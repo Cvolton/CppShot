@@ -1,18 +1,33 @@
 #include "CompositeScreenshot.h"
 
 #include <stdexcept>
+#include <iostream>
 
 inline BYTE toByte(int value){
     return value > 255 ? 255 : value;
 }
 
-CompositeScreenshot::CompositeScreenshot(const Screenshot& white, const Screenshot& black) {
+void CompositeScreenshot::init(const Screenshot& white, const Screenshot& black){
+    std::cout << "Creating composite screenshot" << std::endl;
+
 	Gdiplus::Bitmap* whiteShot = white.getBitmap(), *blackShot = black.getBitmap();
 	if(whiteShot->GetWidth() != blackShot->GetWidth() || whiteShot->GetHeight() != blackShot->GetHeight()) throw std::runtime_error("Black/white screenshot size mismatch");
+    if(whiteShot->GetWidth() == 0 || whiteShot->GetHeight() == 0) throw std::runtime_error("Zero width captured screenshot");
 
 	m_image = new Gdiplus::Bitmap(whiteShot->GetWidth(), whiteShot->GetHeight(), PixelFormat32bppARGB);
 	differentiateAlpha(whiteShot, blackShot);
 	cropImage();
+
+    std::cout << "Image ptr: " << m_image << std::endl;
+}
+
+CompositeScreenshot::CompositeScreenshot(const Screenshot& white, const Screenshot& black) : Screenshot() {
+    this->init(white, black);
+}
+
+CompositeScreenshot::CompositeScreenshot(const Screenshot& white, const Screenshot& black, Gdiplus::Rect crop) : Screenshot() {
+    m_crop = crop;
+    this->init(white, black);
 }
 
 void CompositeScreenshot::differentiateAlpha(Gdiplus::Bitmap* whiteShot, Gdiplus::Bitmap* blackShot){
@@ -102,9 +117,15 @@ Gdiplus::Rect CompositeScreenshot::getCrop() {
 }
 
 void CompositeScreenshot::cropImage() {
+    std::cout << "Cropping image" << std::endl;
+    std::cout << "Size" << getBitmap()->GetWidth() << "x" << getBitmap()->GetHeight() << std::endl;
 	Gdiplus::Rect crop = getCrop();
+    std::cout << "Crop: " << crop.GetLeft() << " " << crop.GetTop() << " " << crop.GetRight() << " " << crop.GetBottom() << std::endl;
 	if(crop.GetLeft() == crop.GetRight() || crop.GetTop() == crop.GetBottom()) throw std::runtime_error("The captured screenshot is empty");
+    std::cout << "Image ptr: " << m_image << std::endl;
 	Gdiplus::Bitmap* croppedBitmap = m_image->Clone(crop, PixelFormatDontCare);
+    std::cout << "Cropped image ptr: " << croppedBitmap << std::endl;
 	delete m_image;
 	m_image = croppedBitmap;
+    std::cout << "New Cropped image ptr: " << m_image << std::endl;
 }

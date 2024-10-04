@@ -55,6 +55,10 @@ void Screenshot::save(const std::wstring& path) {
     m_image->Save(path.c_str(), &pngEncoder, NULL);
 }
 
+bool Screenshot::isCaptured() {
+    return m_image != nullptr;
+}
+
 Gdiplus::Bitmap* Screenshot::getBitmap() const {
 	return m_image;
 }
