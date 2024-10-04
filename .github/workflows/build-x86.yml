@@ -24,7 +24,7 @@ jobs:
 
     - name: Install Ninja
       run: |
-        scoop install ninja
+        choco install ninja
 
     - name: Configure
       run: |
