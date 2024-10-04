@@ -43,7 +43,7 @@ jobs:
         curl https://geometrydash.eu/_other/unicows.dll -o release/unicows.dll -L
 
     - name: Upload release build
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: cppshot-x86
         path: ./release/
