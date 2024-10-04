@@ -1,0 +1,31 @@
+name: Build Binaries
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+    - '**'
+
+jobs:
+  build-windows:
+    name: Build Windows x86
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Install TDM GCC 5.1.0
+      run: |
+        curl https://sourceforge.net/projects/tdm-gcc/files/TDM-GCC%205%20series/5.1.0-tdm-1%20DW2/gcc-5.1.0-tdm-1-dw2-core.zip/download -o compiler.zip -L
+        7z x compiler.zip -oC:/TDM-GCC-5.1.0
+        cmake -DCMAKE_C_COMPILER=C:/TDM-GCC-5.1.0/bin/gcc-dw2.exe -DCMAKE_CXX_COMPILER=C:/TDM-GCC-5.1.0/bin/g++-dw2.exe -B build -S .
+        cmake --build build --config Release
+
+    - name: Temporarily save client build
+      uses: actions/upload-artifact@v3
+      with:
+        name: cppshot-x86
+        path: ./build/CppShot.exe
