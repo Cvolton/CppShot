@@ -29,7 +29,7 @@ jobs:
     - name: Configure
       run: |
         $env:PATH = "C:/TDM-GCC-5.1.0/bin;" + $env:PATH
-        cmake -DCMAKE_C_COMPILER_WORKS=1 -DCMAKE_CXX_COMPILER_WORKS=1 -DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_SHARED_LINKER_FLAGS=-m32 -DCMAKE_C_COMPILER=C:/TDM-GCC-5.1.0/bin/gcc.exe -DCMAKE_CXX_COMPILER=C:/TDM-GCC-5.1.0/bin/g++.exe -G Ninja -B build -S .
+        cmake -DCMAKE_C_COMPILER=C:/TDM-GCC-5.1.0/bin/gcc.exe -DCMAKE_CXX_COMPILER=C:/TDM-GCC-5.1.0/bin/g++.exe -G Ninja -B build -S .
 
     - name: Build
       run: |
