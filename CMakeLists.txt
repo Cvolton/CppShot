@@ -14,3 +14,10 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 target_link_libraries(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/lib/libunicows.a gdiplus gdi32 user32 kernel32 comctl32)
 target_include_directories(${PROJECT_NAME} PRIVATE src)
 add_definitions(-DUNICODE=1)
+
+#if config release set mwindows
+if(CMAKE_BUILD_TYPE STREQUAL "Release") 
+	set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "-O2 -s -DNDEBUG -mwindows")
+else()
+	set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "-DDEBUG")
+endif()
