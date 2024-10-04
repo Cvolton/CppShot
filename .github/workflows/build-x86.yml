@@ -19,8 +19,8 @@ jobs:
 
     - name: Install TDM GCC 5.1.0
       run: |
-        curl https://sourceforge.net/projects/tdm-gcc/files/TDM-GCC%205%20series/5.1.0-tdm-1%20DW2/gcc-5.1.0-tdm-1-dw2-core.zip/download -o compiler.zip -L
-        7z x compiler.zip -oC:/TDM-GCC-5.1.0
+        curl https://sourceforge.net/projects/tdm-gcc/files/TDM-GCC%205%20series/5.1.0-tdm-1%20DW2/gcc-5.1.0-tdm-1-dw2-c++.zip/download -o compiler.zip -L
+        7z x compiler.zip -o"C:/TDM-GCC-5.1.0"
 
     - name: Install Ninja
       run: |
