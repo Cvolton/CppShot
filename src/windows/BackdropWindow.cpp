@@ -7,7 +7,6 @@
 #endif
 
 #include <tchar.h>
-#include <stdexcept>
 #include <iostream>
 
 void BackdropWindow::waitForResize(LONG left, LONG top) const {
@@ -23,47 +22,11 @@ void BackdropWindow::waitForResize(LONG left, LONG top) const {
     }
 }
 
-BackdropWindow::BackdropWindow(HINSTANCE hThisInstance, COLORREF color, const TCHAR* className) : m_color(color) {
-	HBRUSH brush = (HBRUSH) CreateSolidBrush(color);
-
-	WNDCLASSEX wincl;        /* Data structure for the windowclass */
-	wincl.hInstance = hThisInstance;
-	wincl.lpszClassName = className;
-	wincl.lpfnWndProc = BackdropWindow::windowProcedure;      /* This function is called by windows */
-	wincl.style = CS_DBLCLKS;                 /* Catch double-clicks */
-	wincl.cbSize = sizeof (WNDCLASSEX);
-
-	/* Use default icon and mouse-pointer */
-	wincl.hIcon = LoadIcon (NULL, IDI_APPLICATION);
-	wincl.hIconSm = LoadIcon (NULL, IDI_APPLICATION);
-	wincl.hCursor = LoadCursor (NULL, IDC_ARROW);
-	wincl.lpszMenuName = NULL;                 /* No menu */
-	wincl.cbClsExtra = 0;                      /* No extra bytes after the window class */
-	wincl.cbWndExtra = 0;                      /* structure or the window instance */
-	/* Use Windows's default colour as the background of the window */
-	wincl.hbrBackground = brush;
-
-	if(!RegisterClassEx (&wincl)) throw std::runtime_error("Unable to create backdrop window");
-
-	m_window = CreateWindowEx(
-		WS_EX_TOOLWINDOW,                   /* Extended possibilites for variation */
-		className,         /* Classname */
-		_T("Backdrop Window"),       /* Title Text */
-		WS_POPUP , /* default window */
-		CW_USEDEFAULT,       /* Windows decides the position */
-		CW_USEDEFAULT,       /* where the window ends up on the screen */
-		544,                 /* The programs width */
-		375,                 /* and height in pixels */
-		HWND_DESKTOP,        /* The window is a child-window to desktop */
-		NULL,                /* No menu */
-		hThisInstance,       /* Program Instance handler */
-		NULL                 /* No Window Creation data */
-	);
-
-	std::cout << "gg";
+BackdropWindow::BackdropWindow(HINSTANCE hThisInstance, COLORREF color, const TCHAR* className) : Window(hThisInstance, CreateSolidBrush(color), className, _T("Backdrop Window"), WS_EX_TOOLWINDOW, WS_POPUP) {
+	m_color = color;
 }
 
-void BackdropWindow::resize(HWND window) {
+Window& BackdropWindow::resize(HWND window) {
 	HWND desktopWindow = GetDesktopWindow();
 
 	RECT rctDesktop;
@@ -82,28 +45,12 @@ void BackdropWindow::resize(HWND window) {
     if(!SetWindowPos(m_window, window, m_rect.left, m_rect.top, m_rect.right - m_rect.left, m_rect.bottom - m_rect.top, SWP_NOACTIVATE)){
         SetWindowPos(m_window, NULL, m_rect.left, m_rect.top, m_rect.right - m_rect.left, m_rect.bottom - m_rect.top, SWP_NOACTIVATE);
     }
+
+	return *this;
 }
 
-void BackdropWindow::show() const {
-	std::cout << "show";
+Window& BackdropWindow::show(int nCmdShow) const {
 	ShowWindow (m_window, SW_SHOWNOACTIVATE);
     waitForResize(m_rect.left, m_rect.top);
-}
-
-void BackdropWindow::hide() const {
-	std::cout << "hide";
-	ShowWindow (m_window, 0);
-}
-
-LRESULT CALLBACK BackdropWindow::windowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
-    switch (message)                  /* handle the messages */
-    {
-        case WM_DESTROY:
-            PostQuitMessage (0);       /* send a WM_QUIT to the message queue */
-            break;
-        default:                      /* for messages that we don't deal with */
-            return DefWindowProc (hwnd, message, wParam, lParam);
-    }
-
-    return 0;
+    return *const_cast<BackdropWindow*>(this);
 }

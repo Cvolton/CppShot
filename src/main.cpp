@@ -4,7 +4,6 @@
     #define UNICODE
 #endif
 
-#define _WIN32_IE 0x0300
 #undef __STRICT_ANSI__
 
 #include <windows.h>
@@ -20,6 +19,7 @@
 #include "resources.h"
 #include "images/Screenshot.h"
 #include "images/CompositeScreenshot.h"
+#include "windows/Window.h"
 #include "windows/BackdropWindow.h"
 
 #define CPPSHOT_VERSION L"0.5 - build: " __DATE__ " " __TIME__
@@ -28,20 +28,15 @@
 
 #define DEFAULT_SAVE_DIRECTORY L"C:\\test\\"
 
-#define SAVE_INTERMEDIARY_IMAGES 0
-
-/*  Declare Windows procedure  */
-LRESULT CALLBACK WindowProcedure (HWND, UINT, WPARAM, LPARAM);
-
 /*  Make the class name into a global variable  */
 TCHAR szClassName[ ] = _T("MainCreWindow");
 TCHAR blackBackdropClassName[ ] = _T("BlackBackdropWindow");
 TCHAR whiteBackdropClassName[ ] = _T("WhiteBackdropWindow");
 
 inline bool FileExists (const std::wstring& name) {
-  std::string name_string(name.begin(), name.end());
-  struct stat buffer;
-  return (stat (name_string.c_str(), &buffer) == 0);
+    std::string name_string(name.begin(), name.end());
+    struct stat buffer;
+    return (stat (name_string.c_str(), &buffer) == 0);
 }
 
 inline unsigned __int64 CurrentTimestamp() {
@@ -280,109 +275,33 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
                      LPSTR lpszArgument,
                      int nCmdShow)
 {
-    HWND hwnd;               /* This is the handle for our window */
-    MSG messages;            /* Here messages to the application are saved */
-    WNDCLASSEX wincl;        /* Data structure for the windowclass */
-
-    INITCOMMONCONTROLSEX icc;
-
-    // Initialise common controls.
-    icc.dwSize = sizeof(icc);
-    icc.dwICC = ICC_WIN95_CLASSES;
-    InitCommonControlsEx(&icc);
-
-    /* The Window structure */
-    wincl.hInstance = hThisInstance;
-    wincl.lpszClassName = szClassName;
-    wincl.lpfnWndProc = WindowProcedure;      /* This function is called by windows */
-    wincl.style = CS_DBLCLKS;                 /* Catch double-clicks */
-    wincl.cbSize = sizeof (WNDCLASSEX);
-
-    /* Use default icon and mouse-pointer */
-    wincl.hIcon = (HICON) LoadImage(hThisInstance, MAKEINTRESOURCE(IDI_APPICON), IMAGE_ICON, 0, 0, LR_DEFAULTSIZE | LR_DEFAULTCOLOR | LR_SHARED);
-    wincl.hIconSm = LoadIcon (NULL, IDI_APPLICATION);
-    wincl.hCursor = LoadCursor (NULL, IDC_ARROW);
-    wincl.lpszMenuName = NULL;                 /* No menu */
-    wincl.cbClsExtra = 0;                      /* No extra bytes after the window class */
-    wincl.cbWndExtra = 0;                      /* structure or the window instance */
-    /* Use Windows's default colour as the background of the window */
-    wincl.hbrBackground = (HBRUSH) (COLOR_BTNFACE + 1);
-    wincl.lpszMenuName  = MAKEINTRESOURCE(IDR_MAINMENU);
-
-    /* Register the window class, and if it fails quit the program */
-    if (!RegisterClassEx (&wincl))
-        return 0;
-
-    /* The class is registered, let's create the program*/
-    hwnd = CreateWindowEx (
-           0,                   /* Extended possibilites for variation */
-           szClassName,         /* Classname */
-           _T("CppShot " CPPSHOT_VERSION),       /* Title Text */
-           WS_OVERLAPPEDWINDOW, /* default window */
-           CW_USEDEFAULT,       /* Windows decides the position */
-           CW_USEDEFAULT,       /* where the window ends up on the screen */
-           544,                 /* The programs width */
-           375,                 /* and height in pixels */
-           HWND_DESKTOP,        /* The window is a child-window to desktop */
-           NULL,                /* No menu */
-           hThisInstance,       /* Program Instance handler */
-           NULL                 /* No Window Creation data */
-           );
-
-    HWND hwndButton = CreateWindow(
-            L"BUTTON",  // Predefined class; Unicode assumed
-            L"This button doesn't do anything, press CTRL+B to take a screenshot",      // Button text
-            WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,  // Styles
-            10,         // x position
-            10,         // y position
-            500,        // Button width
-            100,        // Button height
-            hwnd,     // Parent window
-            NULL,       // No menu.
-            (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE),
-            NULL);      // Pointer not needed.
-
-     HWND hwndButtonTwo = CreateWindow(
-            L"BUTTON",  // Predefined class; Unicode assumed
-            L"Or you can press CTRL+SHIFT+B to take inactive and active screenshots",      // Button text
-            WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,  // Styles
-            10,         // x position
-            120,         // y position
-            500,        // Button width
-            100,        // Button height
-            hwnd,     // Parent window
-            NULL,       // No menu.
-            (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE),
-            NULL);      // Pointer not needed.
-
-     if (RegisterHotKey(
-            NULL,
-            1,
-            0x2,
-            0x42))  //0x42 is 'b'
-        {
-            _tprintf(_T("CTRL+b\n"));
-        }else{
-            MessageBox(NULL, L"Unable to register the CTRL+B keyboard shortcut.", ERROR_TITLE, 0x10);
-        }
+    
+    Window window(hThisInstance, (HBRUSH) (COLOR_BTNFACE + 1), szClassName, L"CppShot");
+    window.show(nCmdShow);
 
     if (RegisterHotKey(
-            NULL,
-            2,
-            0x6,
-            0x42))  //0x42 is 'b'
-        {
-            _tprintf(_T("CTRL+SHIFT+b\n"));
-        }else{
-            MessageBox(NULL, L"Unable to register the CTRL+SHIFT+B keyboard shortcut.", ERROR_TITLE, 0x10);
-        }
+        NULL,
+        1,
+        0x2,
+        0x42))  //0x42 is 'b'
+    {
+        _tprintf(_T("CTRL+b\n"));
+    }else{
+        MessageBox(NULL, L"Unable to register the CTRL+B keyboard shortcut.", ERROR_TITLE, 0x10);
+    }
 
-    /* Make the window visible on the screen */
-    ShowWindow (hwnd, nCmdShow);
+    if (RegisterHotKey(
+        NULL,
+        2,
+        0x6,
+        0x42))  //0x42 is 'b'
+    {
+        _tprintf(_T("CTRL+SHIFT+b\n"));
+    }else{
+        MessageBox(NULL, L"Unable to register the CTRL+SHIFT+B keyboard shortcut.", ERROR_TITLE, 0x10);
+    }
 
     /* Create backdrop windows */
-    /*HWND whiteHwnd = createBackdropWindow(hThisInstance, *whiteBackdropClassName, (HBRUSH) CreateSolidBrush(RGB(255,255,255)));
-    HWND blackHwnd = createBackdropWindow(hThisInstance, *blackBackdropClassName, (HBRUSH) CreateSolidBrush(RGB(0,0,0)));*/
     BackdropWindow whiteWindow(hThisInstance, RGB(255, 255, 255), whiteBackdropClassName);
     BackdropWindow blackWindow(hThisInstance, RGB(0, 0, 0), blackBackdropClassName);
 
@@ -392,6 +311,7 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
     int val = Gdiplus::GdiplusStartup(&gpToken, &gpStartupInput, NULL);
 
     /* Run the message loop. It will run until GetMessage() returns 0 */
+    MSG messages;
     while (GetMessage (&messages, NULL, 0, 0))
     {
         if (messages.message == WM_HOTKEY)
@@ -443,38 +363,4 @@ VOID StartExplorer()
     // Close process and thread handles.
     CloseHandle( pi.hProcess );
     CloseHandle( pi.hThread );
-}
-
-/*  This function is called by the Windows function DispatchMessage()  */
-
-LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-    switch (message)                  /* handle the messages */
-    {
-        case WM_DESTROY:
-            PostQuitMessage (0);       /* send a WM_QUIT to the message queue */
-            break;
-
-        case WM_COMMAND:               /* menu items */
-          switch (LOWORD(wParam))
-          {
-            case ID_FILE_OPEN:
-            {
-              StartExplorer();
-              return 0;
-            }
-
-            case ID_FILE_EXIT:
-            {
-              DestroyWindow(hwnd);
-              return 0;
-            }
-          }
-          break;
-
-        default:                      /* for messages that we don't deal with */
-            return DefWindowProc (hwnd, message, wParam, lParam);
-    }
-
-    return 0;
 }
