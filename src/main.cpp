@@ -18,9 +18,9 @@
 #include <sys/stat.h>
 
 #include "resources.h"
-#include "Screenshot.h"
-#include "CompositeScreenshot.h"
-#include "BackdropWindow.h"
+#include "images/Screenshot.h"
+#include "images/CompositeScreenshot.h"
+#include "windows/BackdropWindow.h"
 
 #define CPPSHOT_VERSION L"0.5 - build: " __DATE__ " " __TIME__
 

@@ -13,43 +13,7 @@
 void BackdropWindow::waitForResize(LONG left, LONG top) const {
 
     for(int x = 0; x < 66; x++){ //capping out at 330 ms, which is already fairly slow
-
-		/*HDC hdc = GetDC(HWND_DESKTOP);
-		HDC memdc = CreateCompatibleDC(hdc);
-		HBITMAP pixelBmp = CreateCompatibleBitmap(hdc, 1, 1);
-		SelectObject(memdc, pixelBmp);
-		BitBlt(memdc, 0, 0, 1, 1, hdc, left, top, SRCCOPY );
-		DeleteDC(memdc);
-		ReleaseDC(HWND_DESKTOP, hdc);
-
-        //code adapted from https://stackoverflow.com/questions/26233848/c-read-pixels-with-getdibits
-        hdc = GetDC(0);
-
-        BITMAPINFO MyBMInfo = {0};
-        MyBMInfo.bmiHeader.biSize = sizeof(MyBMInfo.bmiHeader);
-
-        // Get the BITMAPINFO structure from the bitmap
-        if(0 == GetDIBits(hdc, pixelBmp, 0, 0, NULL, &MyBMInfo, DIB_RGB_COLORS)) {
-            std::cout << "error" << std::endl;
-        }
-
-        // create the bitmap buffer
-        BYTE* lpPixels = new BYTE[MyBMInfo.bmiHeader.biSizeImage];
-
-        // Better do this here - the original bitmap might have BI_BITFILEDS, which makes it
-        // necessary to read the color table - you might not want this.
-        MyBMInfo.bmiHeader.biCompression = BI_RGB;
-
-        // get the actual bitmap buffer
-        if(0 == GetDIBits(hdc, pixelBmp, 0, MyBMInfo.bmiHeader.biHeight, (LPVOID)lpPixels, &MyBMInfo, DIB_RGB_COLORS)) {
-            std::cout << "error2" << std::endl;
-        }
-
-        //end of stackoverflow code
-        unsigned long currentColor = (((unsigned long)lpPixels[0]) << 16) | (((unsigned long)lpPixels[1]) << 8) | (((unsigned long)lpPixels[2]));
-
-        DeleteObject(pixelBmp);*/
-
+    
     	COLORREF currentColor = GetPixel(GetDC(HWND_DESKTOP), left, top);
         std::cout << std::hex << currentColor << " " << m_color << std::endl;
         if(m_color == currentColor)
