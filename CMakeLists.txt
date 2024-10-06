@@ -3,14 +3,19 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 
-project(CppShot VERSION 0.5.0)
+project(CppShot VERSION 0.5.1)
+
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/res/resources.rc.in
+  ${CMAKE_CURRENT_BINARY_DIR}/res/resources.rc
+  @ONLY)
 
 file(GLOB_RECURSE SOURCES
 	src/*.cpp
 	res/*.rc
 )
 
-add_executable(${PROJECT_NAME} ${SOURCES})
+add_executable(${PROJECT_NAME} ${SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/res/resources.rc)
 target_link_libraries(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/lib/libunicows.a gdiplus gdi32 user32 kernel32 comctl32)
 target_include_directories(${PROJECT_NAME} PRIVATE src)
 add_definitions(-DUNICODE=1)

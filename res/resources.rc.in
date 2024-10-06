@@ -1,8 +1,8 @@
 #include <windows.h>
 #include "resources.h"
 
-CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "application.manifest"
-IDI_APPICON   ICON "cppshot32.ico"
+CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "@CMAKE_SOURCE_DIR@/res/application.manifest"
+IDI_APPICON   ICON "@CMAKE_SOURCE_DIR@/res/cppshot32.ico"
 
 // Main Menu
 IDR_MAINMENU MENU
@@ -17,8 +17,8 @@ END
 
 // Executable version information
 VS_VERSION_INFO    VERSIONINFO
-FILEVERSION        0,4,0,0
-PRODUCTVERSION     0,4,0,0
+FILEVERSION        @PROJECT_VERSION_MAJOR@,@PROJECT_VERSION_MINOR@,@PROJECT_VERSION_PATCH@,0
+PRODUCTVERSION     @PROJECT_VERSION_MAJOR@,@PROJECT_VERSION_MINOR@,@PROJECT_VERSION_PATCH@,0
 FILEFLAGSMASK      VS_FFI_FILEFLAGSMASK
 #ifdef _DEBUG
   FILEFLAGS        VS_FF_DEBUG | VS_FF_PRERELEASE
@@ -35,12 +35,12 @@ BEGIN
     BEGIN
       VALUE "CompanyName", "Cvolton"
       VALUE "FileDescription", "CppShot"
-      VALUE "FileVersion", "0.5.0.0"
+      VALUE "FileVersion", "@PROJECT_VERSION_MAJOR@.@PROJECT_VERSION_MINOR@.@PROJECT_VERSION_PATCH@.0"
       VALUE "InternalName", "cppshot"
-      VALUE "LegalCopyright", "�2021 Cvolton"
+      VALUE "LegalCopyright", "(C) 2021-2024 Cvolton"
       VALUE "OriginalFilename", "cppshot.exe"
       VALUE "ProductName", "CppShot"
-      VALUE "ProductVersion", "0.5.0.0"
+      VALUE "ProductVersion", "@PROJECT_VERSION_MAJOR@.@PROJECT_VERSION_MINOR@.@PROJECT_VERSION_PATCH@.0"
     END
   END
   BLOCK "VarFileInfo"
