@@ -88,13 +88,8 @@ jobs:
       run: |
         cmake --build build --config Release
 
-    - name: Move build to release folder
-      run: |
-        mkdir release
-        mv build/CppShot.exe release/cppshot.exe
-
     - name: Upload release build
       uses: actions/upload-artifact@v4
       with:
         name: cppshot-${{ matrix.config.name }}
-        path: ./release/
+        path: ./build/Release/
