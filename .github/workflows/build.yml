@@ -68,6 +68,9 @@ jobs:
       matrix:
         config:
         - name: arm32
+          platform: arm
+        - name: arm64
+          platform: arm64
 
     name: Build ${{ matrix.config.name }}
     runs-on: windows-2019
@@ -81,7 +84,7 @@ jobs:
     - name: Configure & Build
       continue-on-error: true
       run: |
-        cmake -G "Visual Studio 16 2019" -B build -DCMAKE_BUILD_TYPE=Release -A arm
+        cmake -G "Visual Studio 16 2019" -B build -DCMAKE_BUILD_TYPE=Release -A ${{ matrix.config.platform }} -S .
         cmake --build build --config Release
 
     - name: Now we actually build
