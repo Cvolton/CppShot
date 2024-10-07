@@ -7,7 +7,7 @@ on:
     - '**'
 
 jobs:
-  build-windows:
+  build-windows-x86:
     name: Build Windows x86
     runs-on: windows-latest
 

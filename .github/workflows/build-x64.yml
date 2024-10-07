@@ -7,7 +7,7 @@ on:
     - '**'
 
 jobs:
-  build-windows:
+  build-windows-x64:
     name: Build Windows x64
     runs-on: windows-latest
 
@@ -44,5 +44,5 @@ jobs:
     - name: Upload release build
       uses: actions/upload-artifact@v4
       with:
-        name: cppshot-x86
+        name: cppshot-x64
         path: ./release/
