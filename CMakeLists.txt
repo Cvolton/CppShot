@@ -23,7 +23,6 @@ add_executable(${PROJECT_NAME} WIN32 ${SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/res/
 target_include_directories(${PROJECT_NAME} PRIVATE src)
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-add_compile_definitions(UNICODE=1)
 
 IF( MSVC )
 	SET ( CMAKE_EXE_LINKER_FLAGS /MANIFEST:NO )
@@ -31,18 +30,16 @@ ELSE()
 	target_link_libraries(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/lib/libunicows.a)
 ENDIF()
 
-if(NOT WIN32)
-endif()
-
 target_link_libraries(${PROJECT_NAME} gdiplus gdi32 user32 kernel32 comctl32)
+add_compile_definitions(UNICODE=1)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release") 
-	add_compile_definitions(DDNDEBUG=1)
+	add_compile_definitions(NDEBUG=1)
 	IF( MSVC )
-		set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "/OPT:REF /OPT:ICF /LTCG /INCREMENTAL:NO /SUBSYSTEM:WINDOWS")
+		add_compile_options(/OPT:REF /OPT:ICF /LTCG /INCREMENTAL:NO /SUBSYSTEM:WINDOWS)
 	ELSE()
-		set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "-O2 -s -mwindows")
+		add_compile_options(-O2 -s -mwindows)
 	ENDIF()
 else()
-	add_compile_definitions(DDEBUG=1)
+	add_compile_definitions(DEBUG=1)
 endif()
