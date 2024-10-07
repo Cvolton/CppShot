@@ -5,11 +5,9 @@ set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 
 project(CppShot VERSION 0.5.1)
 
-add_compile_definitions(UNICODE=1)
-
-IF( WIN32 )
-    SET ( CMAKE_EXE_LINKER_FLAGS /MANIFEST:NO )
-ENDIF( WIN32 )
+IF( MSVC OR "${CMAKE_CXX_SIMULATE_ID}" STREQUAL "MSVC" )
+	SET ( CMAKE_EXE_LINKER_FLAGS /MANIFEST:NO )
+ENDIF()
 
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/res/resources.rc.in
@@ -24,15 +22,27 @@ file(GLOB_RECURSE SOURCES
 add_executable(${PROJECT_NAME} WIN32 ${SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/res/resources.rc)
 target_include_directories(${PROJECT_NAME} PRIVATE src)
 
-if(NOT WIN32)
+set_property(TARGET ${PROJECT_NAME} PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+add_compile_definitions(UNICODE=1)
+
+IF( MSVC )
+	SET ( CMAKE_EXE_LINKER_FLAGS /MANIFEST:NO )
+ELSE()
 	target_link_libraries(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/lib/libunicows.a)
+ENDIF()
+
+if(NOT WIN32)
 endif()
 
 target_link_libraries(${PROJECT_NAME} gdiplus gdi32 user32 kernel32 comctl32)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release") 
 	add_compile_definitions(DDNDEBUG=1)
-	set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "-O2 -s -mwindows")
+	IF( MSVC )
+		set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "/OPT:REF /OPT:ICF /LTCG /INCREMENTAL:NO /SUBSYSTEM:WINDOWS")
+	ELSE()
+		set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "-O2 -s -mwindows")
+	ENDIF()
 else()
 	add_compile_definitions(DDEBUG=1)
 endif()
