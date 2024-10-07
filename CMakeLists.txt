@@ -7,7 +7,10 @@ project(CppShot VERSION 0.5.1)
 
 add_compile_definitions(UNICODE=1)
 
-#if config release set mwindows
+IF( WIN32 )
+    SET ( CMAKE_EXE_LINKER_FLAGS /MANIFEST:NO )
+ENDIF( WIN32 )
+
 if(CMAKE_BUILD_TYPE STREQUAL "Release") 
 	add_compile_definitions(DDNDEBUG=1)
 	set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "-O2 -s -mwindows")

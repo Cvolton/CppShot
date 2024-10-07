@@ -1,7 +1,7 @@
 #include <windows.h>
 #include "resources.h"
 
-//CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "@CMAKE_SOURCE_DIR@/res/application.manifest"
+CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "@CMAKE_SOURCE_DIR@/res/application.manifest"
 IDI_APPICON   ICON "@CMAKE_SOURCE_DIR@/res/cppshot32.ico"
 
 // Main Menu
