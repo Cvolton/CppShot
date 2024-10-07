@@ -13,7 +13,7 @@ add_definitions(-DUNICODE -D_UNICODE)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
 	IF( MSVC )
-		add_compile_options(/OPT:REF /OPT:ICF /LTCG /INCREMENTAL:NO /SUBSYSTEM:WINDOWS)
+		add_link_options(/OPT:REF /OPT:ICF /LTCG /INCREMENTAL:NO /SUBSYSTEM:WINDOWS)
 	ELSE()
 		add_compile_options(-O2 -s -mwindows)
 	ENDIF()
