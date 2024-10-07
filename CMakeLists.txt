@@ -5,9 +5,19 @@ set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 
 project(CppShot VERSION 0.5.1)
 
-IF( MSVC OR "${CMAKE_CXX_SIMULATE_ID}" STREQUAL "MSVC" )
+IF( MSVC )
 	SET ( CMAKE_EXE_LINKER_FLAGS /MANIFEST:NO )
 ENDIF()
+
+add_definitions(-DUNICODE -D_UNICODE)
+
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+	IF( MSVC )
+		add_compile_options(/OPT:REF /OPT:ICF /LTCG /INCREMENTAL:NO /SUBSYSTEM:WINDOWS)
+	ELSE()
+		add_compile_options(-O2 -s -mwindows)
+	ENDIF()
+endif()
 
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/res/resources.rc.in
@@ -21,6 +31,7 @@ file(GLOB_RECURSE SOURCES
 
 add_executable(${PROJECT_NAME} WIN32 ${SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/res/resources.rc)
 target_include_directories(${PROJECT_NAME} PRIVATE src)
+target_link_libraries(${PROJECT_NAME} gdiplus gdi32 user32 kernel32 comctl32)
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
@@ -29,17 +40,3 @@ IF( MSVC )
 ELSE()
 	target_link_libraries(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/lib/libunicows.a)
 ENDIF()
-
-target_link_libraries(${PROJECT_NAME} gdiplus gdi32 user32 kernel32 comctl32)
-add_compile_definitions(UNICODE=1)
-
-if(CMAKE_BUILD_TYPE STREQUAL "Release") 
-	add_compile_definitions(NDEBUG=1)
-	IF( MSVC )
-		add_compile_options(/OPT:REF /OPT:ICF /LTCG /INCREMENTAL:NO /SUBSYSTEM:WINDOWS)
-	ELSE()
-		add_compile_options(-O2 -s -mwindows)
-	ENDIF()
-else()
-	add_compile_definitions(DEBUG=1)
-endif()
