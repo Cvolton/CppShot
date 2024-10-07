@@ -1,10 +1,5 @@
 #include "Application.h"
 
-Application::Application() {}
-Application::~Application() {}
-Application::Application(const Application&) {}
-Application& Application::operator=(const Application&) {}
-
 Application& Application::get() {
     static Application instance;
     return instance;

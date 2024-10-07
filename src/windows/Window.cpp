@@ -125,4 +125,6 @@ LRESULT Window::handleMessage(UINT message, WPARAM wParam, LPARAM lParam) {
         default:                      /* for messages that we don't deal with */
             return DefWindowProc (m_window, message, wParam, lParam);
     }
+
+    return 0;
 }
