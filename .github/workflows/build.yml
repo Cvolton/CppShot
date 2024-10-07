@@ -81,7 +81,7 @@ jobs:
     - name: Configure & Build
       run: |
         $env:PATH = "C:/TDM-GCC-5.1.0/bin;" + $env:PATH
-        cmake -G "Visual Studio 16 2019" -B build -DCMAKE_BUILD_TYPE=Release -A arm32
+        cmake -G "Visual Studio 16 2019" -B build -DCMAKE_BUILD_TYPE=Release -A arm
         cmake --build build --config Release
 
     - name: Move build to release folder
