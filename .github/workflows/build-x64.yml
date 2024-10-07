@@ -8,7 +8,7 @@ on:
 
 jobs:
   build-windows:
-    name: Build Windows x86
+    name: Build Windows x64
     runs-on: windows-latest
 
     steps:
@@ -19,7 +19,7 @@ jobs:
 
     - name: Install TDM GCC 5.1.0
       run: |
-        curl https://geometrydash.eu/_other/TDM-GCC-32.zip -o compiler.zip -L
+        curl https://geometrydash.eu/_other/TDM-GCC-64.zip -o compiler.zip -L
         7z x compiler.zip -o"C:/TDM-GCC-5.1.0"
 
     - name: Install Ninja
@@ -36,11 +36,6 @@ jobs:
       run: |
         mkdir release
         mv build/CppShot.exe release/cppshot.exe
-
-    - name: Grab Windows 98/2000 compatibility DLL
-      run: |
-        curl https://github.com/Cvolton/CppShot/releases/download/v0.4/gdiplus.dll -o release/gdiplus.dll -L
-        curl https://geometrydash.eu/_other/unicows.dll -o release/unicows.dll -L
     
     - name: Copy used licenses
       run: |
