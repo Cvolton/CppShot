@@ -9,13 +9,13 @@ IF( MSVC )
 	SET ( CMAKE_EXE_LINKER_FLAGS /MANIFEST:NO )
 ENDIF()
 
-add_definitions(-DUNICODE -D_UNICODE -D_WIN32_WINNT=0x0601)
+add_definitions(-DUNICODE -D_UNICODE -D_WIN32_WINNT=0x0400)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
 	IF( MSVC )
 		add_link_options(/OPT:REF /OPT:ICF /LTCG /INCREMENTAL:NO /SUBSYSTEM:WINDOWS)
 	ELSE()
-		add_compile_options(-O2 -s -mwindows)
+		add_compile_options(-O2 -s -mwindows -flto)
 	ENDIF()
 endif()
 
@@ -38,5 +38,5 @@ set_property(TARGET ${PROJECT_NAME} PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded
 IF( MSVC )
 	SET ( CMAKE_EXE_LINKER_FLAGS /MANIFEST:NO )
 ELSE()
-	target_link_libraries(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/lib/libunicows.a)
+	target_link_libraries(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/lib/libunicows.a -static-libgcc -static-libstdc++ -flto)
 ENDIF()
