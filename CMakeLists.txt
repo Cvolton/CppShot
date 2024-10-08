@@ -9,7 +9,7 @@ IF( MSVC )
 	SET ( CMAKE_EXE_LINKER_FLAGS /MANIFEST:NO )
 ENDIF()
 
-add_definitions(-DUNICODE -D_UNICODE)
+add_definitions(-DUNICODE -D_UNICODE -D_WIN32_WINNT=0x0601)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
 	IF( MSVC )
@@ -34,7 +34,6 @@ target_include_directories(${PROJECT_NAME} PRIVATE src)
 target_link_libraries(${PROJECT_NAME} gdiplus advapi32 gdi32 user32 kernel32 comctl32)
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-set_property(TARGET ${PROJECT_NAME} PROPERTY CMAKE_SYSTEM_VERSION "6.1.7600")
 
 IF( MSVC )
 	SET ( CMAKE_EXE_LINKER_FLAGS /MANIFEST:NO )
