@@ -69,7 +69,7 @@ jobs:
       matrix:
         config:
         - name: arm32
-          compiler: https://github.com/mstorsjo/llvm-mingw/releases/download/20241001/llvm-mingw-20241001-ucrt-armv7.zip
+          compiler: https://github.com/mstorsjo/llvm-mingw/releases/download/20241001/llvm-mingw-20241001-ucrt-x86_64.zip
 
 
     name: Build ${{ matrix.config.name }}
