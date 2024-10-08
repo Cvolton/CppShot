@@ -34,7 +34,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE src)
 target_link_libraries(${PROJECT_NAME} gdiplus advapi32 gdi32 user32 kernel32 comctl32)
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-set_property(TARGET ${PROJECT_NAME} PROPERTY VS_WINDOWS_TARGET_PLATFORM_MIN_VERSION "6.1.7600")
+set_property(TARGET ${PROJECT_NAME} PROPERTY CMAKE_SYSTEM_VERSION "6.1.7600")
 
 IF( MSVC )
 	SET ( CMAKE_EXE_LINKER_FLAGS /MANIFEST:NO )
