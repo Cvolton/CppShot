@@ -57,34 +57,6 @@ Window::Window(HINSTANCE hThisInstance, HBRUSH brush, const TCHAR* className, co
     );
 
     SetWindowLongPtr(m_window, GWLP_USERDATA, (LONG_PTR)this);
-
-    /**
-        HWND hwndButton = CreateWindow(
-            L"BUTTON",  // Predefined class; Unicode assumed
-            L"This button doesn't do anything, press CTRL+B to take a screenshot",      // Button text
-            WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,  // Styles
-            10,         // x position
-            10,         // y position
-            500,        // Button width
-            100,        // Button height
-            hwnd,     // Parent window
-            NULL,       // No menu.
-            (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE),
-            NULL);      // Pointer not needed.
-
-     HWND hwndButtonTwo = CreateWindow(
-            L"BUTTON",  // Predefined class; Unicode assumed
-            L"Or you can press CTRL+SHIFT+B to take inactive and active screenshots",      // Button text
-            WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,  // Styles
-            10,         // x position
-            120,         // y position
-            500,        // Button width
-            100,        // Button height
-            hwnd,     // Parent window
-            NULL,       // No menu.
-            (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE),
-            NULL);      // Pointer not needed.
-     */
 }
 
 LRESULT CALLBACK Window::windowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
@@ -105,6 +77,12 @@ Window& Window::show(int nCmdShow) const {
 Window& Window::hide() const {
     ShowWindow (m_window, 0);
     return *const_cast<Window*>(this);
+}
+
+Window& Window::setSize(int width, int height) {
+    auto scale = getScaleFactor();
+    SetWindowPos(m_window, NULL, 0, 0, width * scale, height * scale, SWP_NOMOVE | SWP_NOZORDER);
+    return *this;
 }
 
 LRESULT Window::handleMessage(UINT message, WPARAM wParam, LPARAM lParam) {
@@ -131,6 +109,29 @@ LRESULT Window::handleMessage(UINT message, WPARAM wParam, LPARAM lParam) {
 
 void Window::addChild(Node* child) {
     m_children.push_back(child);
+}
+
+unsigned int Window::getDPI() {
+    //use GetDpiForWindow if available
+    if (HMODULE hUser32 = GetModuleHandle(L"user32.dll")) {
+        if (auto pGetDpiForWindow = reinterpret_cast<UINT(WINAPI*)(HWND)>(GetProcAddress(hUser32, "GetDpiForWindow"))) {
+            return pGetDpiForWindow(m_window);
+        }
+    }
+
+    //use GetDpiForSystem if available
+    if (HMODULE hShcore = LoadLibrary(L"shcore.dll")) {
+        if (auto pGetDpiForSystem = reinterpret_cast<UINT(WINAPI*)()>(GetProcAddress(hShcore, "GetDpiForSystem"))){
+            return pGetDpiForSystem();
+        }
+    }
+
+    //use GetDeviceCaps as a last resort
+    return GetDeviceCaps(GetDC(m_window), LOGPIXELSX);
+}
+
+double Window::getScaleFactor() {
+    return getDPI() / 96.0;
 }
 
 Window::~Window() {

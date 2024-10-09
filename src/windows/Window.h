@@ -18,8 +18,12 @@ public:
 
     virtual Window& show(int nCmdShow = SW_SHOWNORMAL) const;
     virtual Window& hide() const;
+    Window& setSize(int width, int height);
 
     void addChild(Node* child);
+
+    unsigned int getDPI();
+    double getScaleFactor();
 
     virtual ~Window();
 };

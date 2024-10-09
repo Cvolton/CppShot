@@ -4,7 +4,7 @@
 #include <commctrl.h>
 #include <tchar.h>
 
-Node::Node(LPCTSTR className, DWORD dwStyle, Window& parent) {
+Node::Node(LPCTSTR className, DWORD dwStyle, Window* parent) {
     m_window = CreateWindow(
         className,
         L"Default",
@@ -13,23 +13,25 @@ Node::Node(LPCTSTR className, DWORD dwStyle, Window& parent) {
         10,
         500,
         100,
-        parent.getWindow(),
+        parent->getWindow(),
         NULL,
-        (HINSTANCE) GetWindowLongPtr(parent.getWindow(), GWLP_HINSTANCE),
+        (HINSTANCE) GetWindowLongPtr(parent->getWindow(), GWLP_HINSTANCE),
         NULL
     );
 
     SetWindowLongPtr(m_window, GWLP_USERDATA, (LONG_PTR) this);
+    m_parent = parent;
 }
 
 Node& Node::setPosition(int x, int y) {
-    SetWindowPos(m_window, NULL, x, y, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+    auto scale = m_parent->getScaleFactor();
+    SetWindowPos(m_window, NULL, x * scale, y * scale, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
     return *this;
 }
 
-
 Node& Node::setSize(int width, int height) {
-    SetWindowPos(m_window, NULL, 0, 0, width, height, SWP_NOMOVE | SWP_NOZORDER);
+    auto scale = m_parent->getScaleFactor();
+    SetWindowPos(m_window, NULL, 0, 0, width * scale, height * scale, SWP_NOMOVE | SWP_NOZORDER);
     return *this;
 }
 

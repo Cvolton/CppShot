@@ -5,5 +5,5 @@
 
 class Button : public Node {
 public:
-    Button(Window& parent);
+    Button(Window* parent);
 };
