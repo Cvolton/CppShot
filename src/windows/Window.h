@@ -1,10 +1,14 @@
 #pragma once
 
 #include <windows.h>
+#include <vector>
+#include "ui/Node.h"
 
 class Window {
 protected:
 	HWND m_window = nullptr;
+
+    std::vector<Node*> m_children;
     
     virtual LRESULT handleMessage(UINT message, WPARAM wParam, LPARAM lParam);
 public:
@@ -14,4 +18,8 @@ public:
 
     virtual Window& show(int nCmdShow = SW_SHOWNORMAL) const;
     virtual Window& hide() const;
+
+    void addChild(Node* child);
+
+    virtual ~Window();
 };

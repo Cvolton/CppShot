@@ -128,3 +128,11 @@ LRESULT Window::handleMessage(UINT message, WPARAM wParam, LPARAM lParam) {
 
     return 0;
 }
+
+void Window::addChild(Node* child) {
+    m_children.push_back(child);
+}
+
+Window::~Window() {
+    for(auto child : m_children) delete child;
+}

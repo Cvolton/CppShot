@@ -1,11 +1,3 @@
-#if defined(UNICODE) && !defined(_UNICODE)
-    #define _UNICODE
-#elif defined(_UNICODE) && !defined(UNICODE)
-    #define UNICODE
-#endif
-
-#undef __STRICT_ANSI__
-
 #include <windows.h>
 #include <commctrl.h>
 #include <tchar.h>
@@ -19,7 +11,7 @@
 #include "resources.h"
 #include "images/Screenshot.h"
 #include "images/CompositeScreenshot.h"
-#include "windows/Window.h"
+#include "windows/MainWindow.h"
 #include "windows/BackdropWindow.h"
 
 #define CPPSHOT_VERSION L"0.5 - build: " __DATE__ " " __TIME__
@@ -276,7 +268,7 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
                      int nCmdShow)
 {
     
-    Window window(hThisInstance, (HBRUSH) (COLOR_BTNFACE + 1), szClassName, L"CppShot");
+    MainWindow window(hThisInstance);
     window.show(nCmdShow);
 
     if (RegisterHotKey(
