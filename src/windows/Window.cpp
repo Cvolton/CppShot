@@ -100,6 +100,8 @@ LRESULT Window::handleMessage(UINT message, WPARAM wParam, LPARAM lParam) {
         case WM_DESTROY:
             PostQuitMessage (0);       /* send a WM_QUIT to the message queue */
             break;
+        case 0x02E0: //WM_DPICHANGED
+            for(auto child : m_children) child->forceResize();
         default:                      /* for messages that we don't deal with */
             return DefWindowProc (m_window, message, wParam, lParam);
     }
