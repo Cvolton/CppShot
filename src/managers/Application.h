@@ -9,8 +9,8 @@ public:
     void setup(HINSTANCE instance);
     HINSTANCE getInstance();
 private:
-    Application();
-    ~Application();
-    Application(const Application&);
-    Application& operator=(const Application&);
+    Application() = default;
+    ~Application() = default;
+    Application(const Application&) = default;
+    Application& operator=(const Application&) = default;
 };

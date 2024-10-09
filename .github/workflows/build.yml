@@ -17,6 +17,7 @@ jobs:
         - name: x64
           compiler: https://geometrydash.eu/_other/TDM-GCC-64.zip
 
+
     name: Build ${{ matrix.config.name }}
     runs-on: windows-latest
 
@@ -61,3 +62,84 @@ jobs:
       with:
         name: cppshot-${{ matrix.config.name }}
         path: ./release/
+
+  build-clang:
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+        - name: arm32
+          compiler: https://github.com/mstorsjo/llvm-mingw/releases/download/20241001/llvm-mingw-20241001-ucrt-x86_64.zip
+
+
+    name: Build ${{ matrix.config.name }}
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Install llvm-mingw
+      run: |
+        curl ${{ matrix.config.compiler }} -o compiler.zip -L
+        7z x compiler.zip -o"C:/llvm"
+
+    - name: Install Ninja
+      run: |
+        choco install ninja
+
+    - name: Configure & Build
+      run: |
+        $env:PATH = "C:/llvm/llvm-mingw-20241001-ucrt-x86_64/bin;" + $env:PATH
+        cmake -DCMAKE_BUILD_TYPE:STRING=Release -DCMAKE_C_COMPILER="C:\llvm\llvm-mingw-20241001-ucrt-x86_64\bin\armv7-w64-mingw32-gcc.exe" -DCMAKE_CXX_COMPILER="C:\llvm\llvm-mingw-20241001-ucrt-x86_64\bin\armv7-w64-mingw32-g++.exe" -DCMAKE_LINKER="C:\llvm\llvm-mingw-20241001-ucrt-x86_64\bin\armv7-w64-mingw32-ld.exe" -DCMAKE_RC_COMPILER="C:\\llvm\\llvm-mingw-20241001-ucrt-x86_64\\bin\\llvm-rc.exe" -G Ninja -B build -S .
+        cmake --build build --config Release
+
+    - name: Move build to release folder
+      run: |
+        mkdir release
+        mv build/CppShot.exe release/cppshot.exe
+    
+    - name: Copy used redistributables
+      run: |
+        cp "C:\Program Files (x86)\windows kits\10\Redist\10.0.19041.0\ucrt\DLLs\arm\*" ./release/
+
+    - name: Upload release build
+      uses: actions/upload-artifact@v4
+      with:
+        name: cppshot-${{ matrix.config.name }}
+        path: ./release/
+
+  build-msvc:
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+        - name: arm64
+          platform: arm64
+
+    name: Build ${{ matrix.config.name }}
+    runs-on: windows-2019
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Configure & Build
+      continue-on-error: true
+      run: |
+        cmake -G "Visual Studio 16 2019" -B build -DCMAKE_BUILD_TYPE=Release -A ${{ matrix.config.platform }} -S .
+        cmake --build build --config Release
+
+    - name: Now we actually build
+      run: |
+        cmake --build build --config Release
+
+    - name: Upload release build
+      uses: actions/upload-artifact@v4
+      with:
+        name: cppshot-${{ matrix.config.name }}
+        path: ./build/Release/

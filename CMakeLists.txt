@@ -5,6 +5,20 @@ set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 
 project(CppShot VERSION 0.5.1)
 
+IF( MSVC )
+	SET ( CMAKE_EXE_LINKER_FLAGS /MANIFEST:NO )
+ENDIF()
+
+add_definitions(-DUNICODE -D_UNICODE -D_WIN32_WINNT=0x0400)
+
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+	IF( MSVC )
+		add_link_options(/OPT:REF /OPT:ICF /LTCG /INCREMENTAL:NO /SUBSYSTEM:WINDOWS)
+	ELSE()
+		add_compile_options(-O2 -s -mwindows -flto)
+	ENDIF()
+endif()
+
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/res/resources.rc.in
   ${CMAKE_CURRENT_BINARY_DIR}/res/resources.rc
@@ -15,14 +29,14 @@ file(GLOB_RECURSE SOURCES
 	res/*.rc
 )
 
-add_executable(${PROJECT_NAME} ${SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/res/resources.rc)
-target_link_libraries(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/lib/libunicows.a gdiplus gdi32 user32 kernel32 comctl32)
+add_executable(${PROJECT_NAME} WIN32 ${SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/res/resources.rc)
 target_include_directories(${PROJECT_NAME} PRIVATE src)
-add_definitions(-DUNICODE=1)
+target_link_libraries(${PROJECT_NAME} gdiplus advapi32 gdi32 user32 kernel32 comctl32)
 
-#if config release set mwindows
-if(CMAKE_BUILD_TYPE STREQUAL "Release") 
-	set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "-O2 -s -DNDEBUG -mwindows")
-else()
-	set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "-DDEBUG")
-endif()
+set_property(TARGET ${PROJECT_NAME} PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
+IF( MSVC )
+	SET ( CMAKE_EXE_LINKER_FLAGS /MANIFEST:NO )
+ELSE()
+	target_link_libraries(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/lib/libunicows.a -static-libgcc -static-libstdc++ -flto)
+ENDIF()
