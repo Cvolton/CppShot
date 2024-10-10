@@ -9,6 +9,7 @@
 #include <sys/stat.h>
 
 #include "resources.h"
+#include "Utils.h"
 #include "images/Screenshot.h"
 #include "images/CompositeScreenshot.h"
 #include "windows/MainWindow.h"
@@ -17,8 +18,6 @@
 #define CPPSHOT_VERSION L"0.5 - build: " __DATE__ " " __TIME__
 
 #define ERROR_TITLE L"CppShot Error"
-
-#define DEFAULT_SAVE_DIRECTORY L"C:\\test\\"
 
 /*  Make the class name into a global variable  */
 TCHAR szClassName[ ] = _T("MainCreWindow");
@@ -35,74 +34,11 @@ inline unsigned __int64 CurrentTimestamp() {
     return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 }
 
-std::wstring GetRegistry(LPCTSTR pszValueName, LPCTSTR defaultValue)
-{
-    // Try open registry key
-    HKEY hKey = NULL;
-    LPCTSTR pszSubkey = _T("SOFTWARE\\CppShot");
-    if ( RegOpenKey(HKEY_CURRENT_USER, pszSubkey, &hKey) != ERROR_SUCCESS )
-    {
-        std::cout << "Unable to open registry key" << std::endl;
-    }
-
-    // Buffer to store string read from registry
-    TCHAR szValue[1024];
-    DWORD cbValueLength = sizeof(szValue);
-
-    // Query string value
-    if ( RegQueryValueEx(
-            hKey,
-            pszValueName,
-            NULL,
-            NULL,
-            reinterpret_cast<LPBYTE>(&szValue),
-            &cbValueLength)
-         != ERROR_SUCCESS )
-    {
-        std::cout << "Unable to read registry value" << std::endl;
-        return std::wstring(defaultValue);
-    }
-
-    _tprintf(_T("getregistry: %s\n"), szValue);
-
-    return std::wstring(szValue);
-}
-
-std::wstring GetSaveDirectory(){
-    return GetRegistry(L"Path", DEFAULT_SAVE_DIRECTORY);
-}
-
-const wchar_t* statusString(const Gdiplus::Status status) {
-    switch (status) {
-        case Gdiplus::Ok: return L"Ok";
-        case Gdiplus::GenericError: return L"GenericError";
-        case Gdiplus::InvalidParameter: return L"InvalidParameter";
-        case Gdiplus::OutOfMemory: return L"OutOfMemory";
-        case Gdiplus::ObjectBusy: return L"ObjectBusy";
-        case Gdiplus::InsufficientBuffer: return L"InsufficientBuffer";
-        case Gdiplus::NotImplemented: return L"NotImplemented";
-        case Gdiplus::Win32Error: return L"Win32Error";
-        case Gdiplus::Aborted: return L"Aborted";
-        case Gdiplus::FileNotFound: return L"FileNotFound";
-        case Gdiplus::ValueOverflow: return L"ValueOverflow";
-        case Gdiplus::AccessDenied: return L"AccessDenied";
-        case Gdiplus::UnknownImageFormat: return L"UnknownImageFormat";
-        case Gdiplus::FontFamilyNotFound: return L"FontFamilyNotFound";
-        case Gdiplus::FontStyleNotFound: return L"FontStyleNotFound";
-        case Gdiplus::NotTrueTypeFont: return L"NotTrueTypeFont";
-        case Gdiplus::UnsupportedGdiplusVersion: return L"UnsupportedGdiplusVersion";
-        case Gdiplus::GdiplusNotInitialized: return L"GdiplusNotInitialized";
-        case Gdiplus::PropertyNotFound: return L"PropertyNotFound";
-        case Gdiplus::PropertyNotSupported: return L"PropertyNotSupported";
-        default: return L"Status Type Not Found.";
-    }
-}
-
 void DisplayGdiplusStatusError(const Gdiplus::Status status){
     if(status == Gdiplus::Ok)
         return;
     wchar_t errorText[2048];
-    _stprintf(errorText, L"An error has occured while saving: %s", statusString(status));
+    _stprintf(errorText, L"An error has occured while saving: %s", CppShot::statusString(status));
     MessageBox(NULL, errorText, ERROR_TITLE, 0x40010);
 }
 
@@ -120,7 +56,7 @@ void RemoveIllegalChars(std::wstring& str){
 std::wstring GetSafeFilenameBase(std::wstring windowTitle) {
     RemoveIllegalChars(windowTitle);
 
-    std::wstring path = GetSaveDirectory();
+    std::wstring path = CppShot::GetSaveDirectory();
     std::wcout << L"registrypath: " << path << std::endl;
 
     CreateDirectory(path.c_str(), NULL);
@@ -327,7 +263,7 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
 
 VOID StartExplorer()
 {
-    std::wstring path = GetSaveDirectory();
+    std::wstring path = CppShot::GetSaveDirectory();
    // additional information
    STARTUPINFO si;
    PROCESS_INFORMATION pi;

@@ -1,4 +1,5 @@
 #include "Screenshot.h"
+#include "Utils.h"
 
 Screenshot::Screenshot() {}
 
@@ -31,20 +32,7 @@ void Screenshot::capture(HWND window) {
 }
 
 RECT Screenshot::createRect() {
-    RECT rctDesktop;
-    RECT rct;
-
-    HWND desktopWindow = GetDesktopWindow();
-
-    GetWindowRect(m_window, &rct);
-    GetWindowRect(desktopWindow, &rctDesktop);
-
-	rct.left = (rctDesktop.left < (rct.left-100)) ? (rct.left - 100) : rctDesktop.left;
-    rct.right = (rctDesktop.right > (rct.right+100)) ? (rct.right + 100) : rctDesktop.right;
-    rct.bottom = (rctDesktop.bottom > (rct.bottom+100)) ? (rct.bottom + 100) : rctDesktop.bottom;
-    rct.top = (rctDesktop.top < (rct.top-100)) ? (rct.top - 100) : rctDesktop.top;
-
-    return rct;
+    return CppShot::getCaptureRect(m_window);
 }
 
 void Screenshot::save(const std::wstring& path) {

@@ -1,10 +1,5 @@
 #include "BackdropWindow.h"
-
-#if defined(UNICODE) && !defined(_UNICODE)
-    #define _UNICODE
-#elif defined(_UNICODE) && !defined(UNICODE)
-    #define UNICODE
-#endif
+#include "Utils.h"
 
 #include <tchar.h>
 #include <iostream>
@@ -27,20 +22,7 @@ BackdropWindow::BackdropWindow(HINSTANCE hThisInstance, COLORREF color, const TC
 }
 
 Window& BackdropWindow::resize(HWND window) {
-	HWND desktopWindow = GetDesktopWindow();
-
-	RECT rctDesktop;
-
-	GetWindowRect(window, &m_rect);
-    GetWindowRect(desktopWindow, &rctDesktop);
-
-    std::cout << m_rect.left << ";" << m_rect.right << ";" << m_rect.top << ";" << m_rect.bottom << std::endl;
-    std::cout << rctDesktop.left << ";" << rctDesktop.right << ";" << rctDesktop.top << ";" << rctDesktop.bottom << std::endl;
-
-    m_rect.left = (rctDesktop.left < (m_rect.left-100)) ? (m_rect.left - 100) : rctDesktop.left;
-    m_rect.right = (rctDesktop.right > (m_rect.right+100)) ? (m_rect.right + 100) : rctDesktop.right;
-    m_rect.bottom = (rctDesktop.bottom > (m_rect.bottom+100)) ? (m_rect.bottom + 100) : rctDesktop.bottom;
-    m_rect.top = (rctDesktop.top < (m_rect.top-100)) ? (m_rect.top - 100) : rctDesktop.top;
+    m_rect = CppShot::getCaptureRect(window);
 
     if(!SetWindowPos(m_window, window, m_rect.left, m_rect.top, m_rect.right - m_rect.left, m_rect.bottom - m_rect.top, SWP_NOACTIVATE)){
         SetWindowPos(m_window, NULL, m_rect.left, m_rect.top, m_rect.right - m_rect.left, m_rect.bottom - m_rect.top, SWP_NOACTIVATE);
