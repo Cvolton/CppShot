@@ -14,9 +14,10 @@ jobs:
         config:
         - name: x86
           compiler: https://geometrydash.eu/_other/TDM-GCC-32.zip
+          additional: -DLINK_UNICOWS=1
+          
         - name: x64
           compiler: https://geometrydash.eu/_other/TDM-GCC-64.zip
-          additional: -DLINK_UNICOWS=1
 
 
     name: Build ${{ matrix.config.name }}
