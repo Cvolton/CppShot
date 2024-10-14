@@ -35,8 +35,12 @@ target_link_libraries(${PROJECT_NAME} gdiplus advapi32 gdi32 user32 kernel32 com
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
+IF( DEFINED LINK_UNICOWS )
+	target_link_libraries(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/lib/libunicows.a)	
+ENDIF()
+
 IF( MSVC )
 	SET ( CMAKE_EXE_LINKER_FLAGS /MANIFEST:NO )
 ELSE()
-	target_link_libraries(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/lib/libunicows.a -static-libgcc -static-libstdc++ -flto)
+	target_link_libraries(${PROJECT_NAME} -static-libgcc -static-libstdc++ -flto)
 ENDIF()
