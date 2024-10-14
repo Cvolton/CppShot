@@ -2,6 +2,7 @@
 #include "ui/Button.h"
 
 #include <tchar.h>
+#include <shellapi.h>
 #include "Utils.h"
 
 MainWindow::MainWindow(HINSTANCE hThisInstance) : Window(hThisInstance, (HBRUSH) (COLOR_BTNFACE + 1), L"MainCreWindow", L"CppShot") {

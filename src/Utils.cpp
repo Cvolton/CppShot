@@ -70,10 +70,10 @@ const wchar_t* CppShot::statusString(const Gdiplus::Status status) {
 
 RECT CppShot::getDesktopRect() {
     RECT rctDesktop;
-    rctDesktop.left = GetSystemMetrics(SM_XVIRTUALSCREEN);
-    rctDesktop.top = GetSystemMetrics(SM_YVIRTUALSCREEN);
-    rctDesktop.right = GetSystemMetrics(SM_CXVIRTUALSCREEN) + rctDesktop.left;
-    rctDesktop.bottom = GetSystemMetrics(SM_CYVIRTUALSCREEN) + rctDesktop.top;
+    rctDesktop.left = GetSystemMetrics(76);
+    rctDesktop.top = GetSystemMetrics(77);
+    rctDesktop.right = GetSystemMetrics(78) + rctDesktop.left;
+    rctDesktop.bottom = GetSystemMetrics(79) + rctDesktop.top;
     return rctDesktop;
 }
 
