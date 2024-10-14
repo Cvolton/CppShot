@@ -46,6 +46,7 @@ Node& Node::setTitle(LPCTSTR title) {
 Node& Node::forceResize() {
     setPosition(m_position.first, m_position.second);
     setSize(m_size.first, m_size.second);
+    return *this;
 }
 
 HWND Node::getWindow() {
