@@ -2,7 +2,7 @@
 
 #include <windows.h>
 #include <vector>
-#include "ui/Node.h"
+#include "ui/Button.h"
 
 class Window {
 protected:
@@ -21,6 +21,7 @@ public:
     Window& setSize(int width, int height);
 
     void addChild(Node* child);
+    Button& addButton();
 
     unsigned int getDPI();
     double getScaleFactor();

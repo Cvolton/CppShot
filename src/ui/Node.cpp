@@ -14,13 +14,14 @@ Node::Node(LPCTSTR className, DWORD dwStyle, Window* parent) {
         500,
         100,
         parent->getWindow(),
-        NULL,
+        (HMENU) this,
         (HINSTANCE) GetWindowLongPtr(parent->getWindow(), GWLP_HINSTANCE),
         NULL
     );
 
     SetWindowLongPtr(m_window, GWLP_USERDATA, (LONG_PTR) this);
     m_parent = parent;
+    m_parent->addChild(this);
 }
 
 Node& Node::setPosition(int x, int y) {

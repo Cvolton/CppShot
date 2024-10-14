@@ -6,6 +6,7 @@
 #define _WIN32_IE 0x0300
 
 #include "Window.h"
+#include "ui/Button.h"
 #include "resources.h"
 #include <windows.h>
 #include <commctrl.h>
@@ -88,6 +89,14 @@ Window& Window::setSize(int width, int height) {
 LRESULT Window::handleMessage(UINT message, WPARAM wParam, LPARAM lParam) {
     switch (message) {
         case WM_COMMAND:
+            switch( HIWORD( wParam ) )
+            {
+                case BN_CLICKED:
+                    auto ptr = reinterpret_cast<Button*>(GetWindowLongPtr((HWND) lParam, GWLP_USERDATA));
+                    ptr->onClick();
+                    break;
+            }
+
             switch (LOWORD(wParam)) {
                 case ID_FILE_OPEN:
                     //StartExplorer();
@@ -111,6 +120,11 @@ LRESULT Window::handleMessage(UINT message, WPARAM wParam, LPARAM lParam) {
 
 void Window::addChild(Node* child) {
     m_children.push_back(child);
+}
+
+Button& Window::addButton() {
+    Button* button = new Button(this);
+    return *button;
 }
 
 unsigned int Window::getDPI() {

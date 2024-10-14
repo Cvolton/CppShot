@@ -5,7 +5,7 @@
 
 #define DEFAULT_SAVE_DIRECTORY L"C:\\test\\"
 
-std::wstring CppShot::GetRegistry(LPCTSTR pszValueName, LPCTSTR defaultValue)
+std::wstring CppShot::getRegistry(LPCTSTR pszValueName, LPCTSTR defaultValue)
 {
     // Try open registry key
     HKEY hKey = NULL;
@@ -38,8 +38,8 @@ std::wstring CppShot::GetRegistry(LPCTSTR pszValueName, LPCTSTR defaultValue)
     return std::wstring(szValue);
 }
 
-std::wstring CppShot::GetSaveDirectory(){
-    return GetRegistry(L"Path", DEFAULT_SAVE_DIRECTORY);
+std::wstring CppShot::getSaveDirectory(){
+    return getRegistry(L"Path", DEFAULT_SAVE_DIRECTORY);
 }
 
 const wchar_t* CppShot::statusString(const Gdiplus::Status status) {

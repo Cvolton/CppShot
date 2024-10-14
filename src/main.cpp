@@ -56,7 +56,7 @@ void RemoveIllegalChars(std::wstring& str){
 std::wstring GetSafeFilenameBase(std::wstring windowTitle) {
     RemoveIllegalChars(windowTitle);
 
-    std::wstring path = CppShot::GetSaveDirectory();
+    std::wstring path = CppShot::getSaveDirectory();
     std::wcout << L"registrypath: " << path << std::endl;
 
     CreateDirectory(path.c_str(), NULL);
@@ -259,36 +259,4 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
 
     /* The program return-value is 0 - The value that PostQuitMessage() gave */
     return messages.wParam;
-}
-
-VOID StartExplorer()
-{
-    std::wstring path = CppShot::GetSaveDirectory();
-   // additional information
-   STARTUPINFO si;
-   PROCESS_INFORMATION pi;
-
-   // set the size of the structures
-   ZeroMemory( &si, sizeof(si) );
-   si.cb = sizeof(si);
-   ZeroMemory( &pi, sizeof(pi) );
-
-   TCHAR commandLine[2048];
-   _stprintf(commandLine, L"explorer \"%s\"", path.c_str());
-
-  // start the program up
-  CreateProcess( NULL,   // the path
-    commandLine,        // Command line
-    NULL,           // Process handle not inheritable
-    NULL,           // Thread handle not inheritable
-    FALSE,          // Set handle inheritance to FALSE
-    0,              // No creation flags
-    NULL,           // Use parent's environment block
-    NULL,           // Use parent's starting directory
-    &si,            // Pointer to STARTUPINFO structure
-    &pi             // Pointer to PROCESS_INFORMATION structure (removed extra parentheses)
-    );
-    // Close process and thread handles.
-    CloseHandle( pi.hProcess );
-    CloseHandle( pi.hThread );
 }
