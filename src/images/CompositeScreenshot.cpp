@@ -44,14 +44,16 @@ void CompositeScreenshot::differentiateAlpha(Gdiplus::Bitmap* whiteShot, Gdiplus
     blackShot->LockBits(&rect1, Gdiplus::ImageLockModeRead, PixelFormat32bppARGB, &blackBitmapData);
     BYTE* blackPixels = (BYTE*) (void*) blackBitmapData.Scan0;
 
-    for(unsigned int x = 0; x < whiteShot->GetWidth(); x++){
-        for(unsigned int y = 0; y < whiteShot->GetHeight(); y++){
-            unsigned int currentPixel = (y*(whiteShot->GetWidth()) + x)*4;
+    bool isOnlyOneMonitorConnected = monitorRects.size() == 1;
 
-            bool isInsideMonitor = monitorRects.size() == 1;
+    for(int x = 0; x < whiteShot->GetWidth(); x++){
+        for(int y = 0; y < whiteShot->GetHeight(); y++){
+            int currentPixel = (y*(whiteShot->GetWidth()) + x)*4;
+
+            bool isInsideMonitor = isOnlyOneMonitorConnected;
             if(!isInsideMonitor){
                 for(auto monitorRect : monitorRects){
-                    if(x + m_captureRect.left >= monitorRect.left && x+ m_captureRect.left <= monitorRect.right && y + m_captureRect.top >= monitorRect.top && y + m_captureRect.top <= monitorRect.bottom){
+                    if(x + m_captureRect.left >= monitorRect.left && x+ m_captureRect.left < monitorRect.right && y + m_captureRect.top >= monitorRect.top && y + m_captureRect.top < monitorRect.bottom){
                         isInsideMonitor = true;
                         break;
                     }
