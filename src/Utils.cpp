@@ -88,7 +88,7 @@ RECT CppShot::getCaptureRect(HWND window) {
     return rct;
 }
 
-BOOL CppShot::getMonitorRectsCallback(HMONITOR hMonitor, HDC hdcMonitor, LPRECT lprcMonitor, LPARAM dwData) {
+BOOL CALLBACK CppShot::getMonitorRectsCallback(HMONITOR hMonitor, HDC hdcMonitor, LPRECT lprcMonitor, LPARAM dwData) {
     std::vector<RECT>* monitors = reinterpret_cast<std::vector<RECT>*>(dwData);
     monitors->push_back(*lprcMonitor);
     return TRUE;
