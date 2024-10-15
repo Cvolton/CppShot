@@ -15,8 +15,6 @@
 #include "windows/MainWindow.h"
 #include "windows/BackdropWindow.h"
 
-#define CPPSHOT_VERSION L"0.5 - build: " __DATE__ " " __TIME__
-
 #define ERROR_TITLE L"CppShot Error"
 
 /*  Make the class name into a global variable  */

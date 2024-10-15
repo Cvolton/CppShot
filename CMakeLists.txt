@@ -20,9 +20,14 @@ if(CMAKE_BUILD_TYPE STREQUAL "Release")
 endif()
 
 configure_file(
-  ${CMAKE_CURRENT_SOURCE_DIR}/res/resources.rc.in
-  ${CMAKE_CURRENT_BINARY_DIR}/res/resources.rc
-  @ONLY)
+	${CMAKE_CURRENT_SOURCE_DIR}/res/resources.rc.in
+	${CMAKE_CURRENT_BINARY_DIR}/res/resources.rc
+	@ONLY)
+
+configure_file(
+	${CMAKE_CURRENT_SOURCE_DIR}/src/version.h.in
+	${CMAKE_CURRENT_BINARY_DIR}/src/version.h
+	@ONLY)
 
 file(GLOB_RECURSE SOURCES
 	src/*.cpp
@@ -31,6 +36,7 @@ file(GLOB_RECURSE SOURCES
 
 add_executable(${PROJECT_NAME} WIN32 ${SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/res/resources.rc)
 target_include_directories(${PROJECT_NAME} PRIVATE src)
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/src)
 target_link_libraries(${PROJECT_NAME} gdiplus advapi32 gdi32 user32 kernel32 comctl32)
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")

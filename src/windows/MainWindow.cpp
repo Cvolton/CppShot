@@ -1,11 +1,14 @@
 #include "MainWindow.h"
 #include "ui/Button.h"
+#include "version.h"
 
 #include <tchar.h>
 #include <shellapi.h>
 #include "Utils.h"
 
-MainWindow::MainWindow() : Window((HBRUSH) (COLOR_BTNFACE + 1), L"MainCreWindow", L"CppShot") {
+#define CPPSHOT_VERSION L"" PROJECT_NAME " " PROJECT_VERSION " - build: " __DATE__ " " __TIME__
+
+MainWindow::MainWindow() : Window((HBRUSH) (COLOR_BTNFACE + 1), L"MainCreWindow", CPPSHOT_VERSION) {
     setSize(544, 375);
     
     this->addButton()
