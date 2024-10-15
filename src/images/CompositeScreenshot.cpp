@@ -1,4 +1,5 @@
 #include "CompositeScreenshot.h"
+#include "Utils.h"
 
 #include <stdexcept>
 
@@ -12,6 +13,8 @@ void CompositeScreenshot::init(const Screenshot& white, const Screenshot& black)
     if(whiteShot->GetWidth() == 0 || whiteShot->GetHeight() == 0) throw std::runtime_error("Zero width captured screenshot");
 
 	m_image = new Gdiplus::Bitmap(whiteShot->GetWidth(), whiteShot->GetHeight(), PixelFormat32bppARGB);
+    m_captureRect = white.getCaptureRect();
+
 	differentiateAlpha(whiteShot, blackShot);
 	cropImage();
 }
@@ -26,6 +29,8 @@ CompositeScreenshot::CompositeScreenshot(const Screenshot& white, const Screensh
 }
 
 void CompositeScreenshot::differentiateAlpha(Gdiplus::Bitmap* whiteShot, Gdiplus::Bitmap* blackShot){
+    auto monitorRects = CppShot::getMonitorRects();
+
 	Gdiplus::BitmapData transparentBitmapData;
     Gdiplus::Rect rect1(0, 0, m_image->GetWidth(), m_image->GetHeight());
     m_image->LockBits(&rect1, Gdiplus::ImageLockModeWrite, PixelFormat32bppARGB, &transparentBitmapData);
@@ -42,8 +47,19 @@ void CompositeScreenshot::differentiateAlpha(Gdiplus::Bitmap* whiteShot, Gdiplus
     for(unsigned int x = 0; x < whiteShot->GetWidth(); x++){
         for(unsigned int y = 0; y < whiteShot->GetHeight(); y++){
             unsigned int currentPixel = (y*(whiteShot->GetWidth()) + x)*4;
+
+            bool isInsideMonitor = monitorRects.size() == 1;
+            if(!isInsideMonitor){
+                for(auto monitorRect : monitorRects){
+                    if(x + m_captureRect.left >= monitorRect.left && x+ m_captureRect.left <= monitorRect.right && y + m_captureRect.top >= monitorRect.top && y + m_captureRect.top <= monitorRect.bottom){
+                        isInsideMonitor = true;
+                        break;
+                    }
+                }
+            }
+
             //Setting alpha
-            transparentPixels[currentPixel+3] = toByte((blackPixels[currentPixel+2] - whitePixels[currentPixel+2] + 255 + blackPixels[currentPixel+1] - whitePixels[currentPixel+1] + 255 + blackPixels[currentPixel] - whitePixels[currentPixel] + 255) / 3);
+            transparentPixels[currentPixel+3] = !isInsideMonitor ? 0 : toByte((blackPixels[currentPixel+2] - whitePixels[currentPixel+2] + 255 + blackPixels[currentPixel+1] - whitePixels[currentPixel+1] + 255 + blackPixels[currentPixel] - whitePixels[currentPixel] + 255) / 3);
             if(transparentPixels[currentPixel+3] > 0){
                 transparentPixels[currentPixel+2] = toByte(255 * blackPixels[currentPixel+2] / transparentPixels[currentPixel+3]); //RED
                 transparentPixels[currentPixel+1] = toByte(255 * blackPixels[currentPixel+1] / transparentPixels[currentPixel+3]); //GREEN

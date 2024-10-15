@@ -32,7 +32,7 @@ void Screenshot::capture(HWND window) {
 }
 
 RECT Screenshot::createRect() {
-    return CppShot::getCaptureRect(m_window);
+    return m_captureRect = CppShot::getCaptureRect(m_window);
 }
 
 void Screenshot::save(const std::wstring& path) {
@@ -49,4 +49,8 @@ bool Screenshot::isCaptured() {
 
 Gdiplus::Bitmap* Screenshot::getBitmap() const {
 	return m_image;
+}
+
+RECT Screenshot::getCaptureRect() const {
+    return m_captureRect;
 }

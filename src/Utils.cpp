@@ -87,3 +87,13 @@ RECT CppShot::getCaptureRect(HWND window) {
 
     return rct;
 }
+
+std::vector<RECT> CppShot::getMonitorRects() {
+    std::vector<RECT> monitors;
+    EnumDisplayMonitors(NULL, NULL, [](HMONITOR hMonitor, HDC hdcMonitor, LPRECT lprcMonitor, LPARAM dwData) -> BOOL {
+        std::vector<RECT>* monitors = reinterpret_cast<std::vector<RECT>*>(dwData);
+        monitors->push_back(*lprcMonitor);
+        return TRUE;
+    }, reinterpret_cast<LPARAM>(&monitors));
+    return monitors;
+}

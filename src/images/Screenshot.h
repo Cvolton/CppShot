@@ -6,6 +6,7 @@
 
 class Screenshot {
 protected:
+	RECT m_captureRect;
 	Gdiplus::Bitmap* m_image = nullptr;
 	HWND m_window = nullptr;
 
@@ -19,4 +20,5 @@ public:
 	void save(const std::wstring& path);
 	bool isCaptured();
 	Gdiplus::Bitmap* getBitmap() const;
+	RECT getCaptureRect() const;
 };
