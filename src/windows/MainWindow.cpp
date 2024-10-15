@@ -11,7 +11,7 @@ MainWindow::MainWindow() : Window((HBRUSH) (COLOR_BTNFACE + 1), L"MainCreWindow"
     this->addButton()
         .setPosition(10, 10)
         .setSize(500, 100)
-        .setTitle(L"Press CTRL+B to take a screenshot");
+        .setTitle(L"This button doesn't do anything, press CTRL+B to take a screenshot");
 
     this->addButton()
         .setPosition(10, 120)
