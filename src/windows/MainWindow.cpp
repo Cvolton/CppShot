@@ -9,9 +9,6 @@ MainWindow::MainWindow(HINSTANCE hThisInstance) : Window(hThisInstance, (HBRUSH)
     setSize(544, 375);
     
     this->addButton()
-        .setCallback([](){
-            MessageBox(NULL, L"Hi", L"CppShot", 0);
-        })
         .setPosition(10, 10)
         .setSize(500, 100)
         .setTitle(L"Press CTRL+B to take a screenshot");
