@@ -136,10 +136,6 @@ jobs:
         cmake -G "Visual Studio 16 2019" -B build -DCMAKE_BUILD_TYPE=Release -A ${{ matrix.config.platform }} -S .
         cmake --build build --config Release
 
-    - name: Now we actually build
-      run: |
-        cmake --build build --config Release
-
     - name: Upload release build
       uses: actions/upload-artifact@v4
       with:

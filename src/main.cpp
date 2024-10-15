@@ -25,9 +25,8 @@ TCHAR blackBackdropClassName[ ] = _T("BlackBackdropWindow");
 TCHAR whiteBackdropClassName[ ] = _T("WhiteBackdropWindow");
 
 inline bool FileExists (const std::wstring& name) {
-    std::string name_string(name.begin(), name.end());
-    struct stat buffer;
-    return (stat (name_string.c_str(), &buffer) == 0);
+    
+    return GetFileAttributes(name.c_str()) != INVALID_FILE_ATTRIBUTES && GetLastError() != ERROR_FILE_NOT_FOUND;
 }
 
 inline unsigned __int64 CurrentTimestamp() {
@@ -74,7 +73,7 @@ std::wstring GetSafeFilenameBase(std::wstring windowTitle) {
         fileNameBase = pathbuild.str();
 
         i++;
-    } while(FileExists(fileNameBase + L"_b1.png") | FileExists(fileNameBase + L"_b2.png"));
+    } while(FileExists(fileNameBase + L"_b1.png") || FileExists(fileNameBase + L"_b2.png"));
 
     return fileNameBase;
 }
