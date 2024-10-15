@@ -17,7 +17,7 @@ void BackdropWindow::waitForResize(LONG left, LONG top) const {
     }
 }
 
-BackdropWindow::BackdropWindow(HINSTANCE hThisInstance, COLORREF color, const TCHAR* className) : Window(hThisInstance, CreateSolidBrush(color), className, _T("Backdrop Window"), WS_EX_TOOLWINDOW, WS_POPUP) {
+BackdropWindow::BackdropWindow(COLORREF color, const TCHAR* className) : Window(CreateSolidBrush(color), className, _T("Backdrop Window"), WS_EX_TOOLWINDOW, WS_POPUP) {
 	m_color = color;
 }
 

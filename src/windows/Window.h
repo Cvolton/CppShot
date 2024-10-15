@@ -12,7 +12,7 @@ protected:
     
     virtual LRESULT handleMessage(UINT message, WPARAM wParam, LPARAM lParam);
 public:
-	Window(HINSTANCE hThisInstance, HBRUSH brush, const TCHAR* className, const TCHAR* title, DWORD dwExStyle = 0, DWORD dwStyle = WS_OVERLAPPEDWINDOW);
+	Window(HBRUSH brush, const TCHAR* className, const TCHAR* title, DWORD dwExStyle = 0, DWORD dwStyle = WS_OVERLAPPEDWINDOW);
 	static LRESULT CALLBACK windowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
     HWND getWindow();
 

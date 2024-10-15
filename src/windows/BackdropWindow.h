@@ -8,7 +8,7 @@ class BackdropWindow : public Window {
 	RECT m_rect;
 	void waitForResize(LONG left, LONG top) const;
 public:
-	BackdropWindow(HINSTANCE hThisInstance, COLORREF color, const TCHAR* className);
+	BackdropWindow(COLORREF color, const TCHAR* className);
 	Window& resize(HWND window);
 	Window& show(int nCmdShow = SW_SHOWNORMAL) const;
 };

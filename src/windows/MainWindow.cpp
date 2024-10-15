@@ -5,7 +5,7 @@
 #include <shellapi.h>
 #include "Utils.h"
 
-MainWindow::MainWindow(HINSTANCE hThisInstance) : Window(hThisInstance, (HBRUSH) (COLOR_BTNFACE + 1), L"MainCreWindow", L"CppShot") {
+MainWindow::MainWindow() : Window((HBRUSH) (COLOR_BTNFACE + 1), L"MainCreWindow", L"CppShot") {
     setSize(544, 375);
     
     this->addButton()

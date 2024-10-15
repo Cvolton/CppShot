@@ -15,7 +15,9 @@
 
 #include <tchar.h>
 
-Window::Window(HINSTANCE hThisInstance, HBRUSH brush, const TCHAR* className, const TCHAR* title, DWORD dwExStyle, DWORD dwStyle) {
+Window::Window(HBRUSH brush, const TCHAR* className, const TCHAR* title, DWORD dwExStyle, DWORD dwStyle) {
+    auto instance = GetModuleHandle(NULL);
+
     // Initialise common controls.
     INITCOMMONCONTROLSEX icc;
     icc.dwSize = sizeof(icc);
@@ -23,14 +25,14 @@ Window::Window(HINSTANCE hThisInstance, HBRUSH brush, const TCHAR* className, co
     InitCommonControlsEx(&icc);
 
 	WNDCLASSEX wincl;        /* Data structure for the windowclass */
-	wincl.hInstance = hThisInstance;
+	wincl.hInstance = instance;
 	wincl.lpszClassName = className;
 	wincl.lpfnWndProc = Window::windowProcedure;      /* This function is called by windows */
 	wincl.style = CS_DBLCLKS;                 /* Catch double-clicks */
 	wincl.cbSize = sizeof (WNDCLASSEX);
 
 	/* Use default icon and mouse-pointer */
-	wincl.hIcon = (HICON) LoadImage(hThisInstance, MAKEINTRESOURCE(IDI_APPICON), IMAGE_ICON, 0, 0, LR_DEFAULTSIZE | LR_DEFAULTCOLOR | LR_SHARED);
+	wincl.hIcon = (HICON) LoadImage(instance, MAKEINTRESOURCE(IDI_APPICON), IMAGE_ICON, 0, 0, LR_DEFAULTSIZE | LR_DEFAULTCOLOR | LR_SHARED);
     wincl.hIconSm = wincl.hIcon;
     wincl.hCursor = LoadCursor (NULL, IDC_ARROW);
 	wincl.lpszMenuName = NULL;                 /* No menu */
@@ -53,7 +55,7 @@ Window::Window(HINSTANCE hThisInstance, HBRUSH brush, const TCHAR* className, co
         375,                 /* and height in pixels */
         HWND_DESKTOP,        /* The window is a child-window to desktop */
         NULL,                /* No menu */
-        hThisInstance,       /* Program Instance handler */
+        instance,       /* Program Instance handler */
         NULL                 /* No Window Creation data */
     );
 

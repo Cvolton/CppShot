@@ -204,7 +204,7 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
                      int nCmdShow)
 {
     
-    MainWindow window(hThisInstance);
+    MainWindow window;
     window.show(nCmdShow);
 
     if (RegisterHotKey(
@@ -230,8 +230,8 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
     }
 
     /* Create backdrop windows */
-    BackdropWindow whiteWindow(hThisInstance, RGB(255, 255, 255), whiteBackdropClassName);
-    BackdropWindow blackWindow(hThisInstance, RGB(0, 0, 0), blackBackdropClassName);
+    BackdropWindow whiteWindow(RGB(255, 255, 255), whiteBackdropClassName);
+    BackdropWindow blackWindow(RGB(0, 0, 0), blackBackdropClassName);
 
     /* Start GDI+ */
     Gdiplus::GdiplusStartupInput gpStartupInput;
