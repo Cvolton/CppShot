@@ -11,5 +11,6 @@ namespace CppShot {
     const wchar_t* statusString(const Gdiplus::Status status);
     RECT getDesktopRect();
     RECT getCaptureRect(HWND window);
+    BOOL getMonitorRectsCallback(HMONITOR unnamedParam1, HDC unnamedParam2, LPRECT unnamedParam3, LPARAM unnamedParam4);
     std::vector<RECT> getMonitorRects();
 }

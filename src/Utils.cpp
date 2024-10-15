@@ -88,12 +88,14 @@ RECT CppShot::getCaptureRect(HWND window) {
     return rct;
 }
 
+BOOL CppShot::getMonitorRectsCallback(HMONITOR hMonitor, HDC hdcMonitor, LPRECT lprcMonitor, LPARAM dwData) {
+    std::vector<RECT>* monitors = reinterpret_cast<std::vector<RECT>*>(dwData);
+    monitors->push_back(*lprcMonitor);
+    return TRUE;
+}
+
 std::vector<RECT> CppShot::getMonitorRects() {
     std::vector<RECT> monitors;
-    EnumDisplayMonitors(NULL, NULL, [](HMONITOR hMonitor, HDC hdcMonitor, LPRECT lprcMonitor, LPARAM dwData) -> BOOL {
-        std::vector<RECT>* monitors = reinterpret_cast<std::vector<RECT>*>(dwData);
-        monitors->push_back(*lprcMonitor);
-        return TRUE;
-    }, reinterpret_cast<LPARAM>(&monitors));
+    EnumDisplayMonitors(NULL, NULL, &CppShot::getMonitorRectsCallback, reinterpret_cast<LPARAM>(&monitors));
     return monitors;
 }
