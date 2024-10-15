@@ -197,11 +197,29 @@ void CaptureCompositeScreenshot(HINSTANCE hThisInstance, BackdropWindow& whiteWi
 
 }
 
+static LONG WINAPI exceptionHandler(LPEXCEPTION_POINTERS info) {
+    //restore taskbar and start button
+
+    HWND taskbar = FindWindow(L"Shell_TrayWnd", NULL);
+    HWND startButton = FindWindow(L"Button", L"Start");
+
+    ShowWindow(taskbar, 1);
+    ShowWindow(startButton, 1);
+
+    std::wstringstream ss;
+    ss << L"An unhandled exception has occured. The program will now terminate.\n\n";
+    ss << L"Exception code: 0x" << std::hex << info->ExceptionRecord->ExceptionCode << std::dec << L"\n";
+    ss << L"Exception address: 0x" << std::hex << info->ExceptionRecord->ExceptionAddress << std::dec << L"\n";
+    MessageBox(NULL, ss.str().c_str(), ERROR_TITLE, MB_OK | MB_ICONSTOP);
+    return EXCEPTION_CONTINUE_SEARCH;
+}
+
 int WINAPI WinMain (HINSTANCE hThisInstance,
                      HINSTANCE hPrevInstance,
                      LPSTR lpszArgument,
                      int nCmdShow)
 {
+    SetUnhandledExceptionFilter(exceptionHandler);
     
     MainWindow window;
     window.show(nCmdShow);
