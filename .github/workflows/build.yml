@@ -131,7 +131,6 @@ jobs:
         submodules: recursive
 
     - name: Configure & Build
-      continue-on-error: true
       run: |
         cmake -G "Visual Studio 16 2019" -B build -DCMAKE_BUILD_TYPE=Release -A ${{ matrix.config.platform }} -S .
         cmake --build build --config Release
