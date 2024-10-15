@@ -1,9 +1,8 @@
 #include "Utils.h"
+#include "managers/Application.h"
 
 #include <iostream>
 #include <tchar.h>
-
-#define DEFAULT_SAVE_DIRECTORY L"C:\\test\\"
 
 std::wstring CppShot::getRegistry(LPCTSTR pszValueName, LPCTSTR defaultValue)
 {
@@ -33,13 +32,11 @@ std::wstring CppShot::getRegistry(LPCTSTR pszValueName, LPCTSTR defaultValue)
         return std::wstring(defaultValue);
     }
 
-    _tprintf(_T("getregistry: %s\n"), szValue);
-
     return std::wstring(szValue);
 }
 
 std::wstring CppShot::getSaveDirectory(){
-    return getRegistry(L"Path", DEFAULT_SAVE_DIRECTORY);
+    return Application::get().getSaveDirectory();
 }
 
 const wchar_t* CppShot::statusString(const Gdiplus::Status status) {

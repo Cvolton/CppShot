@@ -1,14 +1,15 @@
 #include "Application.h"
+#include "Utils.h"
 
 Application& Application::get() {
     static Application instance;
     return instance;
 }
 
-void Application::setup(HINSTANCE instance) {
-    m_instance = instance;
+Application::Application() {
+    m_saveDirectory = CppShot::getRegistry(L"Path", L"C:\\test\\");
 }
 
-HINSTANCE Application::getInstance() {
-    return m_instance;
+std::wstring Application::getSaveDirectory() const {
+    return m_saveDirectory;
 }

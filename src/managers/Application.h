@@ -1,15 +1,15 @@
 #pragma once
 
 #include <windows.h>
+#include <string>
 
 class Application {
-    HINSTANCE m_instance;
+    std::wstring m_saveDirectory;
 public:
 	static Application& get();
-    void setup(HINSTANCE instance);
-    HINSTANCE getInstance();
+    std::wstring getSaveDirectory() const;
 private:
-    Application() = default;
+    Application();
     ~Application() = default;
     Application(const Application&) = default;
     Application& operator=(const Application&) = default;
