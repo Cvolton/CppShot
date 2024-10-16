@@ -3,7 +3,6 @@
 #elif defined(_UNICODE) && !defined(UNICODE)
     #define UNICODE
 #endif
-#define _WIN32_IE 0x0300
 
 #include "Window.h"
 #include "ui/Button.h"
