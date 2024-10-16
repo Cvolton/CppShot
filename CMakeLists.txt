@@ -9,7 +9,7 @@ IF( MSVC )
 	SET ( CMAKE_EXE_LINKER_FLAGS /MANIFEST:NO )
 ENDIF()
 
-add_definitions(-DUNICODE -D_UNICODE -D_WIN32_WINNT=0x0500)
+add_definitions(-DUNICODE -D_UNICODE)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
 	IF( MSVC )
@@ -47,6 +47,4 @@ ENDIF()
 
 IF( MSVC )
 	SET ( CMAKE_EXE_LINKER_FLAGS /MANIFEST:NO )
-ELSE()
-	target_link_libraries(${PROJECT_NAME} -static-libgcc -static-libstdc++)
 ENDIF()
