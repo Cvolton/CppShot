@@ -43,7 +43,7 @@ void Screenshot::save(const std::wstring& path) {
     m_image->Save(path.c_str(), &pngEncoder, NULL);
 }
 
-bool Screenshot::isCaptured() const {
+bool Screenshot::isCaptured() {
     return m_image != nullptr;
 }
 

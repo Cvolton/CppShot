@@ -18,7 +18,7 @@ public:
 	~Screenshot();
 	void capture(HWND window);
 	void save(const std::wstring& path);
-	bool isCaptured() const;
+	bool isCaptured();
 	Gdiplus::Bitmap* getBitmap() const;
 	RECT getCaptureRect() const;
 };

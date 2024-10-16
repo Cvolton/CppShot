@@ -7,9 +7,6 @@
 #include <chrono>
 #include <string>
 #include <sys/stat.h>
-#include <thread>
-#include <mutex>
-#include <atomic>
 
 #include "resources.h"
 #include "Utils.h"
@@ -79,14 +76,7 @@ std::wstring GetSafeFilenameBase(std::wstring windowTitle) {
     return fileNameBase;
 }
 
-void CaptureCompositeScreenshot(BackdropWindow& whiteWindow, BackdropWindow& blackWindow, bool creMode){
-    static std::atomic_int captureCount(0);
-    if(captureCount >= 10) return;
-    captureCount++;
-
-    static std::mutex capturingMutex;
-    std::unique_lock<std::mutex> lock(capturingMutex);
-
+void CaptureCompositeScreenshot(HINSTANCE hThisInstance, BackdropWindow& whiteWindow, BackdropWindow& blackWindow, bool creMode){
     std::cout << "Screenshot capture start: " << CurrentTimestamp() << std::endl;
 
     HWND desktopWindow = GetDesktopWindow();
@@ -110,17 +100,24 @@ void CaptureCompositeScreenshot(BackdropWindow& whiteWindow, BackdropWindow& bla
     //spawning backdrop
     SetForegroundWindow(foregroundWindow);
 
-    //additional white flash to make sure everything is drawn as its supposed to be
+    std::cout << "Additional white flash: " << CurrentTimestamp() << std::endl;
+    
+    //WaitForColor(rct, RGB(255,255,255));
     blackWindow.hide();
     whiteWindow.show();
 
     //taking the screenshot
+    //WaitForColor(rct, RGB(0,0,0));
+
     std::cout << "Capturing black: " << CurrentTimestamp() << std::endl;
+
 
     whiteWindow.hide();
     blackWindow.show();
     
     shots.second.capture(foregroundWindow);
+
+    //WaitForColor(rct, RGB(255,255,255));
 
     std::cout << "Capturing white: " << CurrentTimestamp() << std::endl;
     blackWindow.hide();
@@ -148,19 +145,21 @@ void CaptureCompositeScreenshot(BackdropWindow& whiteWindow, BackdropWindow& bla
     blackWindow.hide();
     whiteWindow.hide();
 
-    //unlocking mutex, another capture can start
-    captureCount--;
-    lock.unlock();
-
     if(!shots.first.isCaptured() || !shots.second.isCaptured()){
         MessageBox(NULL, L"Screenshot is empty, aborting capture.", ERROR_TITLE, MB_OK | MB_ICONSTOP);
         return;
     }
 
+    //differentiating alpha
+    std::cout << "Starting image save: " << CurrentTimestamp() << std::endl;
+
     //Saving the image
+    std::cout << "Saving: " << CurrentTimestamp() << std::endl;
+
     TCHAR h[2048];
     GetWindowText(foregroundWindow, h, 2048);
     std::wstring windowTextStr(h);
+    //std::cout << std::endl << len;
 
     auto base = GetSafeFilenameBase(windowTextStr);
 
@@ -179,6 +178,20 @@ void CaptureCompositeScreenshot(BackdropWindow& whiteWindow, BackdropWindow& bla
         MessageBox(NULL, L"An error has occured while capturing the screenshot.", ERROR_TITLE, MB_OK | MB_ICONSTOP);
         return;
     }
+
+    /*std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+    std::wstring fileNameUtf16 = converter.from_bytes(fileName);
+    std::wstring fileNameInactiveUtf16 = converter.from_bytes(fileNameInactive);*/
+
+    /*std::wcout << fileName << std::endl << fileNameInactive << std::endl;
+    DisplayGdiplusStatusError(clonedBitmap->Save(fileName.c_str(), &pngEncoder, NULL));
+    if(creMode)
+        DisplayGdiplusStatusError(clonedInactive->Save(fileNameInactive.c_str(), &pngEncoder, NULL));
+
+    std::cout << "Done: " << CurrentTimestamp() << std::endl;
+    //Cleaning memory
+    delete clonedBitmap;
+    delete clonedInactive;*/
 
 }
 
@@ -248,13 +261,9 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
         {
             _tprintf(_T("WM_HOTKEY received\n"));
             if (messages.wParam == 1)
-                std::thread([&whiteWindow, &blackWindow]{
-                    CaptureCompositeScreenshot(whiteWindow, blackWindow, false);
-                }).detach();
+                CaptureCompositeScreenshot(hThisInstance, whiteWindow, blackWindow, false);
             else if (messages.wParam == 2)
-                std::thread([&whiteWindow, &blackWindow]{
-                    CaptureCompositeScreenshot(whiteWindow, blackWindow, true);
-                }).detach();
+                CaptureCompositeScreenshot(hThisInstance, whiteWindow, blackWindow, true);
         }
 
         /* Translate virtual-key messages into character messages */
