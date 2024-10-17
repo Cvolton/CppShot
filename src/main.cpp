@@ -27,10 +27,6 @@ inline bool FileExists (const std::wstring& name) {
     return GetFileAttributes(name.c_str()) != INVALID_FILE_ATTRIBUTES && GetLastError() != ERROR_FILE_NOT_FOUND;
 }
 
-inline unsigned __int64 CurrentTimestamp() {
-    return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-}
-
 void DisplayGdiplusStatusError(const Gdiplus::Status status){
     if(status == Gdiplus::Ok)
         return;
@@ -77,7 +73,7 @@ std::wstring GetSafeFilenameBase(std::wstring windowTitle) {
 }
 
 void CaptureCompositeScreenshot(HINSTANCE hThisInstance, BackdropWindow& whiteWindow, BackdropWindow& blackWindow, bool creMode){
-    std::cout << "Screenshot capture start: " << CurrentTimestamp() << std::endl;
+    std::cout << "Screenshot capture start: " << CppShot::currentTimestamp() << std::endl;
 
     HWND desktopWindow = GetDesktopWindow();
     HWND foregroundWindow = GetForegroundWindow();
@@ -100,7 +96,7 @@ void CaptureCompositeScreenshot(HINSTANCE hThisInstance, BackdropWindow& whiteWi
     //spawning backdrop
     SetForegroundWindow(foregroundWindow);
 
-    std::cout << "Additional white flash: " << CurrentTimestamp() << std::endl;
+    std::cout << "Additional white flash: " << CppShot::currentTimestamp() << std::endl;
     
     //WaitForColor(rct, RGB(255,255,255));
     blackWindow.hide();
@@ -109,7 +105,7 @@ void CaptureCompositeScreenshot(HINSTANCE hThisInstance, BackdropWindow& whiteWi
     //taking the screenshot
     //WaitForColor(rct, RGB(0,0,0));
 
-    std::cout << "Capturing black: " << CurrentTimestamp() << std::endl;
+    std::cout << "Capturing black: " << CppShot::currentTimestamp() << std::endl;
 
 
     whiteWindow.hide();
@@ -119,7 +115,7 @@ void CaptureCompositeScreenshot(HINSTANCE hThisInstance, BackdropWindow& whiteWi
 
     //WaitForColor(rct, RGB(255,255,255));
 
-    std::cout << "Capturing white: " << CurrentTimestamp() << std::endl;
+    std::cout << "Capturing white: " << CppShot::currentTimestamp() << std::endl;
     blackWindow.hide();
     whiteWindow.show();
     
@@ -130,7 +126,7 @@ void CaptureCompositeScreenshot(HINSTANCE hThisInstance, BackdropWindow& whiteWi
         Sleep(33); //Time for the foreground window to settle
         creShots.first.capture(foregroundWindow); //order swapped bc were starting with white now
         
-        std::cout << "Capturing black inactive: " << CurrentTimestamp() << std::endl;
+        std::cout << "Capturing black inactive: " << CppShot::currentTimestamp() << std::endl;
         whiteWindow.hide();
         blackWindow.show();
 
@@ -151,10 +147,10 @@ void CaptureCompositeScreenshot(HINSTANCE hThisInstance, BackdropWindow& whiteWi
     }
 
     //differentiating alpha
-    std::cout << "Starting image save: " << CurrentTimestamp() << std::endl;
+    std::cout << "Starting image save: " << CppShot::currentTimestamp() << std::endl;
 
     //Saving the image
-    std::cout << "Saving: " << CurrentTimestamp() << std::endl;
+    std::cout << "Saving: " << CppShot::currentTimestamp() << std::endl;
 
     TCHAR h[2048];
     GetWindowText(foregroundWindow, h, 2048);
@@ -163,7 +159,7 @@ void CaptureCompositeScreenshot(HINSTANCE hThisInstance, BackdropWindow& whiteWi
 
     auto base = GetSafeFilenameBase(windowTextStr);
 
-    std::cout << "Differentiating alpha: " << CurrentTimestamp() << std::endl;
+    std::cout << "Differentiating alpha: " << CppShot::currentTimestamp() << std::endl;
     try {
         CompositeScreenshot transparentImage(shots.first, shots.second);
         transparentImage.save(base + L"_b1.png");

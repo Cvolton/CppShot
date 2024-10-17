@@ -3,6 +3,7 @@
 
 #include <stdexcept>
 #include <cstring>
+#include <sstream>
 
 inline BYTE toByte(int value){
     return value > 255 ? 255 : value;
@@ -49,9 +50,11 @@ void CompositeScreenshot::differentiateAlpha(Gdiplus::Bitmap* whiteShot, Gdiplus
 
     auto width = whiteShot->GetWidth();
     auto height = whiteShot->GetHeight();
+    
+    auto beforeStamp = CppShot::currentTimestamp();
 
-    for(int x = 0; x < width; x++){
-        for(int y = 0; y < height; y++){
+    for(int y = 0; y < height; y++){
+        for(int x = 0; x < height; x++){
             int currentPixel = (y*width + x)*4;
 
             bool isInsideMonitor = isOnlyOneMonitorConnected;
@@ -64,15 +67,34 @@ void CompositeScreenshot::differentiateAlpha(Gdiplus::Bitmap* whiteShot, Gdiplus
                 }
             }
 
-            //Setting alpha
-            transparentPixels[currentPixel+3] = !isInsideMonitor ? 0 : toByte((blackPixels[currentPixel+2] - whitePixels[currentPixel+2] + 255 + blackPixels[currentPixel+1] - whitePixels[currentPixel+1] + 255 + blackPixels[currentPixel] - whitePixels[currentPixel] + 255) / 3);
-            if(transparentPixels[currentPixel+3] > 0){
-                transparentPixels[currentPixel+2] = toByte(255 * blackPixels[currentPixel+2] / transparentPixels[currentPixel+3]); //RED
-                transparentPixels[currentPixel+1] = toByte(255 * blackPixels[currentPixel+1] / transparentPixels[currentPixel+3]); //GREEN
-                transparentPixels[currentPixel] = toByte(255 * blackPixels[currentPixel] / transparentPixels[currentPixel+3]); //BLUE
+            // Oddly enough this makes the code both faster and more readable
+            // compared to direct array accesses in the calculation itself
+            BYTE blackR = blackPixels[currentPixel + 2];
+            BYTE blackG = blackPixels[currentPixel + 1];
+            BYTE blackB = blackPixels[currentPixel];
+            BYTE whiteR = whitePixels[currentPixel + 2];
+            BYTE whiteG = whitePixels[currentPixel + 1];
+            BYTE whiteB = whitePixels[currentPixel];
+
+            // Calculate alpha
+            BYTE alpha = isInsideMonitor
+                ? toByte((blackR - whiteR + 255 + blackG - whiteG + 255 + blackB - whiteB + 255) / 3)
+                : 0;
+
+            transparentPixels[currentPixel + 3] = alpha;
+
+            if (alpha > 0) {
+                transparentPixels[currentPixel + 2] = toByte(255 * blackR / alpha); // RED
+                transparentPixels[currentPixel + 1] = toByte(255 * blackG / alpha); // GREEN
+                transparentPixels[currentPixel] = toByte(255 * blackB / alpha); // BLUE
             }
         }
     }
+
+    auto afterStamp = CppShot::currentTimestamp();
+    std::wstringstream os;
+    os << L"Differentiating alpha took: " << afterStamp - beforeStamp << L"ms" << std::endl;
+    MessageBox(NULL, os.str().c_str(), L"Performance", MB_OK);
 
     m_image->UnlockBits(&transparentBitmapData);
     whiteShot->UnlockBits(&whiteBitmapData);
