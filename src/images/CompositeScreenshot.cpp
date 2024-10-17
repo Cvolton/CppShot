@@ -54,6 +54,9 @@ void CompositeScreenshot::differentiateAlpha(Gdiplus::Bitmap* whiteShot, Gdiplus
     BYTE* transparentFullBegin = nullptr;
     BYTE* whiteFullBegin = nullptr;
 
+    BYTE* transparentFullBegin = nullptr;
+    BYTE* whiteFullBegin = nullptr;
+
     for(int y = 0; y < height; y++){
         for(int x = 0; x < width; x++){
             int currentPixel = (y*width + x)*4;
