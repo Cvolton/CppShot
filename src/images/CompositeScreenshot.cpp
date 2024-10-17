@@ -5,8 +5,6 @@
 #include <cstring>
 #include <sstream>
 
-#define restrict __restrict__
-
 inline BYTE toByte(int value){
     return value > 255 ? 255 : value;
 }
@@ -38,15 +36,15 @@ void CompositeScreenshot::differentiateAlpha(Gdiplus::Bitmap* whiteShot, Gdiplus
 	Gdiplus::BitmapData transparentBitmapData;
     Gdiplus::Rect rect1(0, 0, m_image->GetWidth(), m_image->GetHeight());
     m_image->LockBits(&rect1, Gdiplus::ImageLockModeWrite, PixelFormat32bppARGB, &transparentBitmapData);
-    BYTE* restrict transparentPixels = (BYTE*) transparentBitmapData.Scan0;
+    BYTE* transparentPixels = (BYTE*) transparentBitmapData.Scan0;
 
     Gdiplus::BitmapData whiteBitmapData;
     whiteShot->LockBits(&rect1, Gdiplus::ImageLockModeRead, PixelFormat32bppARGB, &whiteBitmapData);
-    const BYTE* restrict whitePixels = (BYTE*) whiteBitmapData.Scan0;
+    const BYTE* whitePixels = (BYTE*) whiteBitmapData.Scan0;
 
     Gdiplus::BitmapData blackBitmapData;
     blackShot->LockBits(&rect1, Gdiplus::ImageLockModeRead, PixelFormat32bppARGB, &blackBitmapData);
-    const BYTE* restrict blackPixels = (BYTE*) blackBitmapData.Scan0;
+    const BYTE* blackPixels = (BYTE*) blackBitmapData.Scan0;
 
     bool isOnlyOneMonitorConnected = monitorRects.size() == 1;
 
@@ -77,7 +75,7 @@ void CompositeScreenshot::differentiateAlpha(Gdiplus::Bitmap* whiteShot, Gdiplus
             BYTE whiteR = whitePixels[currentPixel + 2];
             BYTE whiteG = whitePixels[currentPixel + 1];
             BYTE whiteB = whitePixels[currentPixel];
-            
+
             // Calculate alpha
             BYTE alpha = isInsideMonitor
                 ? toByte((blackR - whiteR + 255 + blackG - whiteG + 255 + blackB - whiteB + 255) / 3)
