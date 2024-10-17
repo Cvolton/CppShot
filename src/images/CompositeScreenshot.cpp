@@ -166,31 +166,19 @@ Gdiplus::Rect CompositeScreenshot::getCrop() {
 void CompositeScreenshot::cropImage() {
 	Gdiplus::Rect crop = getCrop();
 	if(crop.GetLeft() == crop.GetRight() || crop.GetTop() == crop.GetBottom()) throw std::runtime_error("The captured screenshot is empty");
-	Gdiplus::Bitmap* croppedBitmap = m_image->Clone(crop, PixelFormatDontCare);
-	delete m_image;
-	m_image = croppedBitmap;
-    
-    //ensureEvenDimensions();
-}
 
-void CompositeScreenshot::ensureEvenDimensions(){
-    auto oldBitmap = m_image;
-
-    auto oldHeight = oldBitmap->GetHeight();
-    auto oldWidth = oldBitmap->GetWidth();
-
-    if(oldWidth % 2 == 0 && oldHeight % 2 == 0) return;
-
-    auto newWidth = m_image->GetWidth();
-    auto newHeight = m_image->GetHeight();
+    auto newWidth = crop.GetRight() - crop.GetLeft();
+    auto newHeight = crop.GetBottom() - crop.GetTop();
+    auto copyWidth = newWidth;
 
     if(newWidth % 2 != 0) newWidth++;
     if(newHeight % 2 != 0) newHeight++;
 
     Gdiplus::Bitmap* newBitmap = new Gdiplus::Bitmap(newWidth, newHeight, PixelFormat32bppARGB);
+    Gdiplus::Bitmap* oldBitmap = m_image;
 
-    Gdiplus::Rect oldRect(0, 0, m_image->GetWidth(), m_image->GetHeight());
-    Gdiplus::Rect newRect(0, 0, newBitmap->GetWidth(), newBitmap->GetHeight());
+    Gdiplus::Rect oldRect(0, 0, oldBitmap->GetWidth(), oldBitmap->GetHeight());
+    Gdiplus::Rect newRect(0, 0, newWidth, newHeight);
 
     Gdiplus::BitmapData newBitmapData;
     newBitmap->LockBits(&newRect, Gdiplus::ImageLockModeWrite, PixelFormat32bppARGB, &newBitmapData);
@@ -200,16 +188,23 @@ void CompositeScreenshot::ensureEvenDimensions(){
     oldBitmap->LockBits(&oldRect, Gdiplus::ImageLockModeRead, PixelFormat32bppARGB, &oldBitmapData);
     BYTE* oldPixels = (BYTE*) (void*) oldBitmapData.Scan0;
 
-    for(size_t x = 0; x < oldHeight; x++){
-        size_t rowStart = x*oldWidth;
-        size_t newRowStart = x*newWidth;
+    auto top = crop.GetTop();
+    auto leftMult = crop.GetLeft() * 4;
+    auto oldWidth = oldBitmap->GetWidth();
+    auto oldWidthBytes = oldWidth * 4;
+    auto copyBytes = copyWidth * 4;
+    auto newWidthMult = newWidth * 4;
+    auto newHeightMult = newHeight * 4;
 
-        std::memcpy(newPixels + newRowStart*4, oldPixels + rowStart*4, oldWidth*4);
+    BYTE* oldRowPtr = oldPixels + leftMult + top * oldWidthBytes;
+
+    for(int x = 0; x < newHeightMult; x += 4){
+        BYTE* srcRow = oldRowPtr + x;
+        BYTE* dstRow = newPixels + x;
+
+        std::memcpy(dstRow, srcRow, copyBytes);
     }
 
-    newBitmap->UnlockBits(&newBitmapData);
-    oldBitmap->UnlockBits(&oldBitmapData);
-
-    delete m_image;
-    m_image = newBitmap;
+	delete m_image;
+	m_image = newBitmap;
 }
