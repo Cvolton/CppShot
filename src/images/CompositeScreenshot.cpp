@@ -5,6 +5,8 @@
 #include <cstring>
 #include <sstream>
 
+#define restrict __restrict__
+
 inline BYTE toByte(int value){
     return value > 255 ? 255 : value;
 }
@@ -36,15 +38,15 @@ void CompositeScreenshot::differentiateAlpha(Gdiplus::Bitmap* whiteShot, Gdiplus
 	Gdiplus::BitmapData transparentBitmapData;
     Gdiplus::Rect rect1(0, 0, m_image->GetWidth(), m_image->GetHeight());
     m_image->LockBits(&rect1, Gdiplus::ImageLockModeWrite, PixelFormat32bppARGB, &transparentBitmapData);
-    BYTE* transparentPixels = (BYTE*) (void*) transparentBitmapData.Scan0;
+    BYTE* restrict transparentPixels = (BYTE*) transparentBitmapData.Scan0;
 
     Gdiplus::BitmapData whiteBitmapData;
     whiteShot->LockBits(&rect1, Gdiplus::ImageLockModeRead, PixelFormat32bppARGB, &whiteBitmapData);
-    BYTE* whitePixels = (BYTE*) (void*) whiteBitmapData.Scan0;
+    const BYTE* restrict whitePixels = (BYTE*) whiteBitmapData.Scan0;
 
     Gdiplus::BitmapData blackBitmapData;
     blackShot->LockBits(&rect1, Gdiplus::ImageLockModeRead, PixelFormat32bppARGB, &blackBitmapData);
-    BYTE* blackPixels = (BYTE*) (void*) blackBitmapData.Scan0;
+    const BYTE* restrict blackPixels = (BYTE*) blackBitmapData.Scan0;
 
     bool isOnlyOneMonitorConnected = monitorRects.size() == 1;
 
@@ -53,40 +55,27 @@ void CompositeScreenshot::differentiateAlpha(Gdiplus::Bitmap* whiteShot, Gdiplus
     
     auto beforeStamp = CppShot::currentTimestamp();
 
-    for(int y = 0; y < height; y++){
-        for(int x = 0; x < height; x++){
-            int currentPixel = (y*width + x)*4;
+    for(int i = 0; i < 1000; i++) {
+        for(int y = 0; y < height; y++){
+            for(int x = 0; x < height; x++){
+                int currentPixel = (y*width + x)*4;
 
-            bool isInsideMonitor = isOnlyOneMonitorConnected;
-            if(!isInsideMonitor){
-                for(auto monitorRect : monitorRects){
-                    if(x + m_captureRect.left >= monitorRect.left && x+ m_captureRect.left < monitorRect.right && y + m_captureRect.top >= monitorRect.top && y + m_captureRect.top < monitorRect.bottom){
-                        isInsideMonitor = true;
-                        break;
+                bool isInsideMonitor = isOnlyOneMonitorConnected;
+                if(!isInsideMonitor){
+                    for(auto monitorRect : monitorRects){
+                        if(x + m_captureRect.left >= monitorRect.left && x+ m_captureRect.left < monitorRect.right && y + m_captureRect.top >= monitorRect.top && y + m_captureRect.top < monitorRect.bottom){
+                            isInsideMonitor = true;
+                            break;
+                        }
                     }
                 }
-            }
 
-            // Oddly enough this makes the code both faster and more readable
-            // compared to direct array accesses in the calculation itself
-            BYTE blackR = blackPixels[currentPixel + 2];
-            BYTE blackG = blackPixels[currentPixel + 1];
-            BYTE blackB = blackPixels[currentPixel];
-            BYTE whiteR = whitePixels[currentPixel + 2];
-            BYTE whiteG = whitePixels[currentPixel + 1];
-            BYTE whiteB = whitePixels[currentPixel];
-
-            // Calculate alpha
-            BYTE alpha = isInsideMonitor
-                ? toByte((blackR - whiteR + 255 + blackG - whiteG + 255 + blackB - whiteB + 255) / 3)
-                : 0;
-
-            transparentPixels[currentPixel + 3] = alpha;
-
-            if (alpha > 0) {
-                transparentPixels[currentPixel + 2] = toByte(255 * blackR / alpha); // RED
-                transparentPixels[currentPixel + 1] = toByte(255 * blackG / alpha); // GREEN
-                transparentPixels[currentPixel] = toByte(255 * blackB / alpha); // BLUE
+                transparentPixels[currentPixel+3] = !isInsideMonitor ? 0 : toByte((blackPixels[currentPixel+2] - whitePixels[currentPixel+2] + 255 + blackPixels[currentPixel+1] - whitePixels[currentPixel+1] + 255 + blackPixels[currentPixel] - whitePixels[currentPixel] + 255) / 3);
+                if(transparentPixels[currentPixel+3] > 0){
+                    transparentPixels[currentPixel+2] = toByte(255 * blackPixels[currentPixel+2] / transparentPixels[currentPixel+3]); //RED
+                    transparentPixels[currentPixel+1] = toByte(255 * blackPixels[currentPixel+1] / transparentPixels[currentPixel+3]); //GREEN
+                    transparentPixels[currentPixel] = toByte(255 * blackPixels[currentPixel] / transparentPixels[currentPixel+3]); //BLUE
+                }
             }
         }
     }
