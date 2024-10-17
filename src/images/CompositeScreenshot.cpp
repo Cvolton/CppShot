@@ -54,9 +54,6 @@ void CompositeScreenshot::differentiateAlpha(Gdiplus::Bitmap* whiteShot, Gdiplus
     BYTE* transparentFullBegin = nullptr;
     BYTE* whiteFullBegin = nullptr;
 
-    BYTE* transparentFullBegin = nullptr;
-    BYTE* whiteFullBegin = nullptr;
-
     for(int y = 0; y < height; y++){
         for(int x = 0; x < width; x++){
             int currentPixel = (y*width + x)*4;
@@ -190,14 +187,13 @@ void CompositeScreenshot::cropImage() {
     auto oldWidth = oldBitmap->GetWidth();
     auto oldWidthBytes = oldWidth * 4;
     auto copyBytes = copyWidth * 4;
-    auto newWidthMult = newWidth * 4;
-    auto newHeightMult = newHeight * 4;
+    auto newWidthBytes = newWidth * 4;
 
     BYTE* oldRowPtr = oldPixels + leftMult + top * oldWidthBytes;
 
-    for(int x = 0; x < newHeightMult; x += 4){
-        BYTE* srcRow = oldRowPtr + x;
-        BYTE* dstRow = newPixels + x;
+    for(int x = 0; x < newHeight; x++){
+        BYTE* srcRow = oldRowPtr + x * oldWidthBytes;
+        BYTE* dstRow = newPixels + x * newWidthBytes;
 
         std::memcpy(dstRow, srcRow, copyBytes);
     }
