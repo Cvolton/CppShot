@@ -47,9 +47,12 @@ void CompositeScreenshot::differentiateAlpha(Gdiplus::Bitmap* whiteShot, Gdiplus
 
     bool isOnlyOneMonitorConnected = monitorRects.size() == 1;
 
-    for(int x = 0; x < whiteShot->GetWidth(); x++){
-        for(int y = 0; y < whiteShot->GetHeight(); y++){
-            int currentPixel = (y*(whiteShot->GetWidth()) + x)*4;
+    auto width = whiteShot->GetWidth();
+    auto height = whiteShot->GetHeight();
+
+    for(int x = 0; x < width; x++){
+        for(int y = 0; y < height; y++){
+            int currentPixel = (y*width + x)*4;
 
             bool isInsideMonitor = isOnlyOneMonitorConnected;
             if(!isInsideMonitor){
