@@ -186,12 +186,13 @@ void CompositeScreenshot::cropImage() {
     auto leftMult = crop.GetLeft() * 4;
     auto oldWidth = oldBitmap->GetWidth();
     auto oldWidthBytes = oldWidth * 4;
+    auto copyHeight = crop.GetBottom() - top;
     auto copyBytes = copyWidth * 4;
     auto newWidthBytes = newWidth * 4;
 
     BYTE* oldRowPtr = oldPixels + leftMult + top * oldWidthBytes;
 
-    for(int x = 0; x < newHeight; x++){
+    for(int x = 0; x < copyHeight; x++){
         BYTE* srcRow = oldRowPtr + x * oldWidthBytes;
         BYTE* dstRow = newPixels + x * newWidthBytes;
 
