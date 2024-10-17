@@ -18,13 +18,7 @@ void CompositeScreenshot::init(const Screenshot& white, const Screenshot& black)
     m_captureRect = white.getCaptureRect();
 
 	differentiateAlpha(whiteShot, blackShot);
-
-    auto beforeStamp = CppShot::currentTimestamp();
 	cropImage();
-    auto afterStamp = CppShot::currentTimestamp();
-    std::wstringstream os;
-    os << L"cropImage took: " << afterStamp - beforeStamp << L"ms" << std::endl;
-    MessageBox(NULL, os.str().c_str(), L"Performance", MB_OK);
 }
 
 CompositeScreenshot::CompositeScreenshot(const Screenshot& white, const Screenshot& black) : Screenshot() {
