@@ -36,15 +36,15 @@ void CompositeScreenshot::differentiateAlpha(Gdiplus::Bitmap* whiteShot, Gdiplus
 	Gdiplus::BitmapData transparentBitmapData;
     Gdiplus::Rect rect1(0, 0, m_image->GetWidth(), m_image->GetHeight());
     m_image->LockBits(&rect1, Gdiplus::ImageLockModeWrite, PixelFormat32bppARGB, &transparentBitmapData);
-    BYTE* transparentPixels = (BYTE*) (void*) transparentBitmapData.Scan0;
+    BYTE* transparentPixels = (BYTE*) transparentBitmapData.Scan0;
 
     Gdiplus::BitmapData whiteBitmapData;
     whiteShot->LockBits(&rect1, Gdiplus::ImageLockModeRead, PixelFormat32bppARGB, &whiteBitmapData);
-    BYTE* whitePixels = (BYTE*) (void*) whiteBitmapData.Scan0;
+    const BYTE* whitePixels = (BYTE*) whiteBitmapData.Scan0;
 
     Gdiplus::BitmapData blackBitmapData;
     blackShot->LockBits(&rect1, Gdiplus::ImageLockModeRead, PixelFormat32bppARGB, &blackBitmapData);
-    BYTE* blackPixels = (BYTE*) (void*) blackBitmapData.Scan0;
+    const BYTE* blackPixels = (BYTE*) blackBitmapData.Scan0;
 
     bool isOnlyOneMonitorConnected = monitorRects.size() == 1;
 
@@ -53,8 +53,11 @@ void CompositeScreenshot::differentiateAlpha(Gdiplus::Bitmap* whiteShot, Gdiplus
     
     auto beforeStamp = CppShot::currentTimestamp();
 
+    BYTE* transparentFullBegin = nullptr;
+    BYTE* whiteFullBegin = nullptr;
+
     for(int y = 0; y < height; y++){
-        for(int x = 0; x < height; x++){
+        for(int x = 0; x < width; x++){
             int currentPixel = (y*width + x)*4;
 
             bool isInsideMonitor = isOnlyOneMonitorConnected;
@@ -81,12 +84,22 @@ void CompositeScreenshot::differentiateAlpha(Gdiplus::Bitmap* whiteShot, Gdiplus
                 ? toByte((blackR - whiteR + 255 + blackG - whiteG + 255 + blackB - whiteB + 255) / 3)
                 : 0;
 
-            transparentPixels[currentPixel + 3] = alpha;
+            if(alpha == 255) {
+                if(transparentFullBegin == nullptr) transparentFullBegin = transparentPixels + currentPixel;
+                if(whiteFullBegin == nullptr) whiteFullBegin = (BYTE*) whitePixels + currentPixel;
+            } else {
+                if(transparentFullBegin != nullptr) {
+                    std::memcpy(transparentFullBegin, whiteFullBegin, (transparentPixels + currentPixel) - transparentFullBegin);
+                    transparentFullBegin = nullptr;
+                    whiteFullBegin = nullptr;
+                }
 
-            if (alpha > 0) {
-                transparentPixels[currentPixel + 2] = toByte(255 * blackR / alpha); // RED
-                transparentPixels[currentPixel + 1] = toByte(255 * blackG / alpha); // GREEN
-                transparentPixels[currentPixel] = toByte(255 * blackB / alpha); // BLUE
+                if (alpha > 0) {
+                    transparentPixels[currentPixel + 3] = alpha;
+                    transparentPixels[currentPixel + 2] = toByte(255 * blackR / alpha); // RED
+                    transparentPixels[currentPixel + 1] = toByte(255 * blackG / alpha); // GREEN
+                    transparentPixels[currentPixel] = toByte(255 * blackB / alpha); // BLUE
+                }
             }
         }
     }
@@ -158,7 +171,7 @@ void CompositeScreenshot::cropImage() {
 	delete m_image;
 	m_image = croppedBitmap;
     
-    ensureEvenDimensions();
+    //ensureEvenDimensions();
 }
 
 void CompositeScreenshot::ensureEvenDimensions(){
