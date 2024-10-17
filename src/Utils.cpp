@@ -79,8 +79,8 @@ RECT CppShot::getCaptureRect(HWND window) {
     auto rctDesktop = CppShot::getDesktopRect();
 
     GetWindowRect(window, &rct);
-    auto dpi = CppShot::getDPIForWindow(window);
-    auto offset = 100 * dpi / 96;
+    int dpi = CppShot::getDPIForWindow(window);
+    int offset = 100 * dpi / 96;
 
     rct.left = (rctDesktop.left < (rct.left-offset)) ? (rct.left - offset) : rctDesktop.left;
     rct.right = (rctDesktop.right > (rct.right+offset)) ? (rct.right + offset) : rctDesktop.right;
