@@ -55,27 +55,25 @@ void CompositeScreenshot::differentiateAlpha(Gdiplus::Bitmap* whiteShot, Gdiplus
     
     auto beforeStamp = CppShot::currentTimestamp();
 
-    for(int i = 0; i < 1000; i++) {
-        for(int y = 0; y < height; y++){
-            for(int x = 0; x < height; x++){
-                int currentPixel = (y*width + x)*4;
+    for(int y = 0; y < height; y++){
+        for(int x = 0; x < width; x++){
+            int currentPixel = (y*width + x)*4;
 
-                bool isInsideMonitor = isOnlyOneMonitorConnected;
-                if(!isInsideMonitor){
-                    for(auto monitorRect : monitorRects){
-                        if(x + m_captureRect.left >= monitorRect.left && x+ m_captureRect.left < monitorRect.right && y + m_captureRect.top >= monitorRect.top && y + m_captureRect.top < monitorRect.bottom){
-                            isInsideMonitor = true;
-                            break;
-                        }
+            bool isInsideMonitor = isOnlyOneMonitorConnected;
+            if(!isInsideMonitor){
+                for(auto monitorRect : monitorRects){
+                    if(x + m_captureRect.left >= monitorRect.left && x+ m_captureRect.left < monitorRect.right && y + m_captureRect.top >= monitorRect.top && y + m_captureRect.top < monitorRect.bottom){
+                        isInsideMonitor = true;
+                        break;
                     }
                 }
+            }
 
-                transparentPixels[currentPixel+3] = !isInsideMonitor ? 0 : toByte((blackPixels[currentPixel+2] - whitePixels[currentPixel+2] + 255 + blackPixels[currentPixel+1] - whitePixels[currentPixel+1] + 255 + blackPixels[currentPixel] - whitePixels[currentPixel] + 255) / 3);
-                if(transparentPixels[currentPixel+3] > 0){
-                    transparentPixels[currentPixel+2] = toByte(255 * blackPixels[currentPixel+2] / transparentPixels[currentPixel+3]); //RED
-                    transparentPixels[currentPixel+1] = toByte(255 * blackPixels[currentPixel+1] / transparentPixels[currentPixel+3]); //GREEN
-                    transparentPixels[currentPixel] = toByte(255 * blackPixels[currentPixel] / transparentPixels[currentPixel+3]); //BLUE
-                }
+            transparentPixels[currentPixel+3] = !isInsideMonitor ? 0 : toByte((blackPixels[currentPixel+2] - whitePixels[currentPixel+2] + 255 + blackPixels[currentPixel+1] - whitePixels[currentPixel+1] + 255 + blackPixels[currentPixel] - whitePixels[currentPixel] + 255) / 3);
+            if(transparentPixels[currentPixel+3] > 0){
+                transparentPixels[currentPixel+2] = toByte(255 * blackPixels[currentPixel+2] / transparentPixels[currentPixel+3]); //RED
+                transparentPixels[currentPixel+1] = toByte(255 * blackPixels[currentPixel+1] / transparentPixels[currentPixel+3]); //GREEN
+                transparentPixels[currentPixel] = toByte(255 * blackPixels[currentPixel] / transparentPixels[currentPixel+3]); //BLUE
             }
         }
     }
@@ -147,7 +145,7 @@ void CompositeScreenshot::cropImage() {
 	delete m_image;
 	m_image = croppedBitmap;
     
-    ensureEvenDimensions();
+    //ensureEvenDimensions();
 }
 
 void CompositeScreenshot::ensureEvenDimensions(){
