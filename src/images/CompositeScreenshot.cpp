@@ -67,11 +67,6 @@ void CompositeScreenshot::differentiateAlpha(Gdiplus::Bitmap* whiteShot, Gdiplus
                 transparentPixels[currentPixel+2] = toByte(255 * blackPixels[currentPixel+2] / transparentPixels[currentPixel+3]); //RED
                 transparentPixels[currentPixel+1] = toByte(255 * blackPixels[currentPixel+1] / transparentPixels[currentPixel+3]); //GREEN
                 transparentPixels[currentPixel] = toByte(255 * blackPixels[currentPixel] / transparentPixels[currentPixel+3]); //BLUE
-            } else {
-                //Setting fully transparent pixels to 0
-                transparentPixels[currentPixel+2] = 0;
-                transparentPixels[currentPixel+1] = 0;
-                transparentPixels[currentPixel] = 0;
             }
         }
     }
