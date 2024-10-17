@@ -79,11 +79,13 @@ RECT CppShot::getCaptureRect(HWND window) {
     auto rctDesktop = CppShot::getDesktopRect();
 
     GetWindowRect(window, &rct);
+    auto dpi = CppShot::getDPIForWindow(window);
+    auto offset = 100 * dpi / 96;
 
-    rct.left = (rctDesktop.left < (rct.left-100)) ? (rct.left - 100) : rctDesktop.left;
-    rct.right = (rctDesktop.right > (rct.right+100)) ? (rct.right + 100) : rctDesktop.right;
-    rct.bottom = (rctDesktop.bottom > (rct.bottom+100)) ? (rct.bottom + 100) : rctDesktop.bottom;
-    rct.top = (rctDesktop.top < (rct.top-100)) ? (rct.top - 100) : rctDesktop.top;
+    rct.left = (rctDesktop.left < (rct.left-offset)) ? (rct.left - offset) : rctDesktop.left;
+    rct.right = (rctDesktop.right > (rct.right+offset)) ? (rct.right + offset) : rctDesktop.right;
+    rct.bottom = (rctDesktop.bottom > (rct.bottom+offset)) ? (rct.bottom + offset) : rctDesktop.bottom;
+    rct.top = (rctDesktop.top < (rct.top-offset)) ? (rct.top - offset) : rctDesktop.top;
 
     return rct;
 }
@@ -98,4 +100,23 @@ std::vector<RECT> CppShot::getMonitorRects() {
     std::vector<RECT> monitors;
     EnumDisplayMonitors(NULL, NULL, &CppShot::getMonitorRectsCallback, reinterpret_cast<LPARAM>(&monitors));
     return monitors;
+}
+
+unsigned int CppShot::getDPIForWindow(HWND window) {
+    //use GetDpiForWindow if available
+    if (HMODULE hUser32 = GetModuleHandle(L"user32.dll")) {
+        if (auto pGetDpiForWindow = reinterpret_cast<UINT(WINAPI*)(HWND)>(GetProcAddress(hUser32, "GetDpiForWindow"))) {
+            return pGetDpiForWindow(window);
+        }
+    }
+
+    //use GetDpiForSystem if available
+    if (HMODULE hShcore = LoadLibrary(L"shcore.dll")) {
+        if (auto pGetDpiForSystem = reinterpret_cast<UINT(WINAPI*)()>(GetProcAddress(hShcore, "GetDpiForSystem"))){
+            return pGetDpiForSystem();
+        }
+    }
+
+    //use GetDeviceCaps as a last resort
+    return GetDeviceCaps(GetDC(window), LOGPIXELSX);
 }

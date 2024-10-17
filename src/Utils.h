@@ -13,4 +13,5 @@ namespace CppShot {
     RECT getCaptureRect(HWND window);
     BOOL CALLBACK getMonitorRectsCallback(HMONITOR unnamedParam1, HDC unnamedParam2, LPRECT unnamedParam3, LPARAM unnamedParam4);
     std::vector<RECT> getMonitorRects();
+    unsigned int getDPIForWindow(HWND window);
 }

@@ -7,10 +7,10 @@
 #include "Window.h"
 #include "ui/Button.h"
 #include "resources.h"
+#include "Utils.h"
 #include <windows.h>
 #include <commctrl.h>
 #include <stdexcept>
-#include <iostream>
 
 #include <tchar.h>
 
@@ -129,22 +129,7 @@ Button& Window::addButton() {
 }
 
 unsigned int Window::getDPI() {
-    //use GetDpiForWindow if available
-    if (HMODULE hUser32 = GetModuleHandle(L"user32.dll")) {
-        if (auto pGetDpiForWindow = reinterpret_cast<UINT(WINAPI*)(HWND)>(GetProcAddress(hUser32, "GetDpiForWindow"))) {
-            return pGetDpiForWindow(m_window);
-        }
-    }
-
-    //use GetDpiForSystem if available
-    if (HMODULE hShcore = LoadLibrary(L"shcore.dll")) {
-        if (auto pGetDpiForSystem = reinterpret_cast<UINT(WINAPI*)()>(GetProcAddress(hShcore, "GetDpiForSystem"))){
-            return pGetDpiForSystem();
-        }
-    }
-
-    //use GetDeviceCaps as a last resort
-    return GetDeviceCaps(GetDC(m_window), LOGPIXELSX);
+    return CppShot::getDPIForWindow(m_window);
 }
 
 double Window::getScaleFactor() {
