@@ -69,11 +69,24 @@ void CompositeScreenshot::differentiateAlpha(Gdiplus::Bitmap* whiteShot, Gdiplus
                 }
             }
 
-            transparentPixels[currentPixel+3] = !isInsideMonitor ? 0 : toByte((blackPixels[currentPixel+2] - whitePixels[currentPixel+2] + 255 + blackPixels[currentPixel+1] - whitePixels[currentPixel+1] + 255 + blackPixels[currentPixel] - whitePixels[currentPixel] + 255) / 3);
-            if(transparentPixels[currentPixel+3] > 0){
-                transparentPixels[currentPixel+2] = toByte(255 * blackPixels[currentPixel+2] / transparentPixels[currentPixel+3]); //RED
-                transparentPixels[currentPixel+1] = toByte(255 * blackPixels[currentPixel+1] / transparentPixels[currentPixel+3]); //GREEN
-                transparentPixels[currentPixel] = toByte(255 * blackPixels[currentPixel] / transparentPixels[currentPixel+3]); //BLUE
+            // Oddly enough this makes the code both faster and more readable
+            // compared to direct array accesses in the calculation itself
+            BYTE blackR = blackPixels[currentPixel + 2];
+            BYTE blackG = blackPixels[currentPixel + 1];
+            BYTE blackB = blackPixels[currentPixel];
+            BYTE whiteR = whitePixels[currentPixel + 2];
+            BYTE whiteG = whitePixels[currentPixel + 1];
+            BYTE whiteB = whitePixels[currentPixel];
+            
+            // Calculate alpha
+            BYTE alpha = isInsideMonitor
+                ? toByte((blackR - whiteR + 255 + blackG - whiteG + 255 + blackB - whiteB + 255) / 3)
+                : 0;
+            transparentPixels[currentPixel + 3] = alpha;
+            if (alpha > 0) {
+                transparentPixels[currentPixel + 2] = toByte(255 * blackR / alpha); // RED
+                transparentPixels[currentPixel + 1] = toByte(255 * blackG / alpha); // GREEN
+                transparentPixels[currentPixel] = toByte(255 * blackB / alpha); // BLUE
             }
         }
     }
