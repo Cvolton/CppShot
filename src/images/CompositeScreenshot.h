@@ -13,6 +13,7 @@ class CompositeScreenshot : public Screenshot {
 	void init(const Screenshot& white, const Screenshot& black);
 	void differentiateAlpha(Gdiplus::Bitmap* whiteShot, Gdiplus::Bitmap* blackShot);
 	void cropImage();
+	void ensureEvenDimensions();
 	Gdiplus::Rect calculateCrop();
 public:
 	Gdiplus::Rect getCrop();

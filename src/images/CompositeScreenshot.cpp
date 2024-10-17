@@ -2,6 +2,7 @@
 #include "Utils.h"
 
 #include <stdexcept>
+#include <cstring>
 
 inline BYTE toByte(int value){
     return value > 255 ? 255 : value;
@@ -136,4 +137,47 @@ void CompositeScreenshot::cropImage() {
 	Gdiplus::Bitmap* croppedBitmap = m_image->Clone(crop, PixelFormatDontCare);
 	delete m_image;
 	m_image = croppedBitmap;
+    
+    ensureEvenDimensions();
+}
+
+void CompositeScreenshot::ensureEvenDimensions(){
+    auto oldBitmap = m_image;
+
+    auto oldHeight = oldBitmap->GetHeight();
+    auto oldWidth = oldBitmap->GetWidth();
+
+    if(oldWidth % 2 == 0 && oldHeight % 2 == 0) return;
+
+    auto newWidth = m_image->GetWidth();
+    auto newHeight = m_image->GetHeight();
+
+    if(newWidth % 2 != 0) newWidth++;
+    if(newHeight % 2 != 0) newHeight++;
+
+    Gdiplus::Bitmap* newBitmap = new Gdiplus::Bitmap(newWidth, newHeight, PixelFormat32bppARGB);
+
+    Gdiplus::Rect oldRect(0, 0, m_image->GetWidth(), m_image->GetHeight());
+    Gdiplus::Rect newRect(0, 0, newBitmap->GetWidth(), newBitmap->GetHeight());
+
+    Gdiplus::BitmapData newBitmapData;
+    newBitmap->LockBits(&newRect, Gdiplus::ImageLockModeWrite, PixelFormat32bppARGB, &newBitmapData);
+    BYTE* newPixels = (BYTE*) (void*) newBitmapData.Scan0;
+
+    Gdiplus::BitmapData oldBitmapData;
+    oldBitmap->LockBits(&oldRect, Gdiplus::ImageLockModeRead, PixelFormat32bppARGB, &oldBitmapData);
+    BYTE* oldPixels = (BYTE*) (void*) oldBitmapData.Scan0;
+
+    for(size_t x = 0; x < oldHeight; x++){
+        size_t rowStart = x*oldWidth;
+        size_t newRowStart = x*newWidth;
+
+        std::memcpy(newPixels + newRowStart*4, oldPixels + rowStart*4, oldWidth*4);
+    }
+
+    newBitmap->UnlockBits(&newBitmapData);
+    oldBitmap->UnlockBits(&oldBitmapData);
+
+    delete m_image;
+    m_image = newBitmap;
 }
