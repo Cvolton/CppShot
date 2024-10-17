@@ -4,7 +4,7 @@ A transparent screnshot utility written in C++. Tested for compatibility on Wind
 Download here: https://github.com/Cvolton/CppShot/releases/latest
 
 ## Note for Surface RT devices
-The arm32 binary of CppShot is not signed, if you wish to use it on newer Windows 8 builds, make sure to sign CppShot.exe using for example [the Jailbreak Sign Tool](https://xdaforums.com/t/windows-rt-8-1-jailbreak-sign-tool.3228929/). Note that if you sign the DLLs, the program won't launch - make sure to only sign the exe.
+The arm32 binary of CppShot is not signed - if you wish to use it on newer Windows 8 builds, make sure to sign CppShot.exe using for example [the Jailbreak Sign Tool](https://xdaforums.com/t/windows-rt-8-1-jailbreak-sign-tool.3228929/). Note that if you sign the DLLs, the program won't launch - make sure to only sign the exe.
 
 ## Building
 Our build environment currently utilizes CMake. These are the currently recommended compiler/platform combinations
